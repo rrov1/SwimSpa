@@ -32,11 +32,11 @@ for nSpaNum in range(len(lSpas)):
     
     # Temperaturen
     print(f'sending temp and heater ops')
-    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Temperatureinheit={}".format(nSpaNum, urllib.parse.quote(facade.water_heater.temperature_unit)) + "& "
-    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.AktuelleTemperatur={}".format(nSpaNum, round(facade.water_heater.current_temperature, 2)) + "& "
-    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.ZielTemperatur={}".format(nSpaNum, round(facade.water_heater.target_temperature, 2)) + "& "
-    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.EchteZielTemperatur={}".format(nSpaNum, round(facade.water_heater.real_target_temperature, 2)) + "& "
-    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Heizer={}".format(nSpaNum, facade.water_heater.current_operation) + "& "
+    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Temperatureinheit={}".format(nSpaNum, urllib.parse.quote(facade.water_heater.temperature_unit)) + "&ack=true& "
+    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.AktuelleTemperatur={}".format(nSpaNum, round(facade.water_heater.current_temperature, 2)) + "&ack=true& "
+    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.ZielTemperatur={}".format(nSpaNum, round(facade.water_heater.target_temperature, 2)) + "&ack=true& "
+    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.EchteZielTemperatur={}".format(nSpaNum, round(facade.water_heater.real_target_temperature, 2)) + "&ack=true& "
+    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Heizer={}".format(nSpaNum, facade.water_heater.current_operation) + "&ack=true& "
     
     # Wasserprflege
     print('sending water care')
@@ -47,22 +47,22 @@ for nSpaNum in range(len(lSpas)):
     except:
         print(".")
     if facade.water_care.mode != None:
-        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Wasserpflege={}".format(nSpaNum, facade.water_care.modes[facade.water_care.mode]) + "& "
-        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.WasserpflegeModi={}".format(nSpaNum, facade.water_care.modes) + "& "
-        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.WasserpflegeIndex={}".format(nSpaNum, facade.water_care.mode) + "& "
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Wasserpflege={}".format(nSpaNum, facade.water_care.modes[facade.water_care.mode]) + "&ack=true& "
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.WasserpflegeModi={}".format(nSpaNum, facade.water_care.modes) + "&ack=true& "
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.WasserpflegeIndex={}".format(nSpaNum, facade.water_care.mode) + "&ack=true& "
     
     # Pumpen
     print('sending pumps')
     for pump in facade.pumps:
         print(f"{pump.name}")
         if (pump.name != "Waterfall"):
-            sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Pumpen.{}.Modus={}".format(nSpaNum, pump.key, pump.mode) + "& "
+            sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Pumpen.{}.Modus={}".format(nSpaNum, pump.key, pump.mode) + "&ack=true& "
     
     # Lichter
     print('sending lights')
     for light in facade.lights:
         print(f"{light.name}")
-        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Lichter.{}.Is_On={}".format(nSpaNum, light.key, str(light.is_on).lower()) + "& "
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Lichter.{}.Is_On={}".format(nSpaNum, light.key, str(light.is_on).lower()) + "&ack=true& "
     
     # Sensoren
     print('sending sensors')
@@ -71,7 +71,7 @@ for nSpaNum in range(len(lSpas)):
         sKey = binary_sensor.key
         sKey = sKey.replace(" ", "_")
         sKey = sKey.replace(":", "_")
-        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Sensoren.{}.State={}".format(nSpaNum, sKey, urllib.parse.quote((str(binary_sensor.state)).lower())) + "& "
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Sensoren.{}.State={}".format(nSpaNum, sKey, urllib.parse.quote((str(binary_sensor.state)).lower())) + "&ack=true& "
     
 
     sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
