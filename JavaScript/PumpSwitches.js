@@ -38,3 +38,11 @@ function switchPump(obj) {
         }
     });
 }
+
+function getParent(id, num) {
+    var idParent = id;
+    for (var min = 0; min < num; min++) {
+        idParent = idParent.substring(0, idParent.lastIndexOf("."));
+    }
+    return idParent;
+}
