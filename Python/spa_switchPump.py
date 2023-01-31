@@ -3,7 +3,7 @@ import asyncio
 import logging
 import requests
 
-IOBROKER_BASE_URL = "http://<iobroker_ip_address>>:8087/set/"
+IOBROKER_BASE_URL = "http://<<iobroker_ip_address>>:8087/set/"
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
@@ -32,7 +32,16 @@ class SampleSpaMan(GeckoAsyncSpaMan):
         # Uncomment this line to see events generated
         # print(f"{event}: {kwargs}")
         pass
-
+    
+    def cutModeName(self, modeString):
+        # correct mode string in case geckolib returns longer strings than in modes collection
+        if modeString == "OFF":
+            return "OFF"
+        if modeString == "HIGH":
+            return "HI"
+        if modeString == "LOW":
+            return "LO"
+        return modeString
 
 async def main() -> None:
 
@@ -43,7 +52,7 @@ async def main() -> None:
         await spaman.wait_for_descriptors()
 
         if len(spaman.spa_descriptors) == 0:
-            print("**** There were no spas found on your network.")
+            print("*** there were no spas found on your network.")
             return
 
         print("*** connecting to spa")
@@ -52,22 +61,41 @@ async def main() -> None:
         # Wait for the facade to be ready
         await spaman.wait_for_facade()
 
-        #print(f"*** {spaman.facade.pumps}")
-        print(f"*** current pump mode: {spaman.facade.pumps[PUMP_ID].mode}")
+        print(f"*** pump name: {spaman.facade.pumps[PUMP_ID].name}")
+        print(f"*** pump modes: {spaman.facade.pumps[PUMP_ID].modes}")
+        print(f"*** current pump mode: {spaman.cutModeName(spaman.facade.pumps[PUMP_ID].mode)}")
         NEW_PUMP_STATE_NAME = spaman.facade.pumps[PUMP_ID].modes[NEW_PUMP_STATE]
         print(f"*** new pump state name: {NEW_PUMP_STATE_NAME}")
-        
-        if spaman.facade.pumps[PUMP_ID].mode != NEW_PUMP_STATE_NAME:
+
+        if len(spaman.facade.pumps) > 0:
+            print(f"*** found: {len(spaman.facade.pumps)} pumps")
+        else:
+            print(f"error: no pumps returned from geckolib")
+            quit(-1)
+
+        if spaman.cutModeName(spaman.facade.pumps[PUMP_ID].mode) != NEW_PUMP_STATE_NAME:
             await spaman.facade.pumps[PUMP_ID].async_set_mode(NEW_PUMP_STATE_NAME)
             await asyncio.sleep(1)
-            print(f"*** pump mode is now: {spaman.facade.pumps[PUMP_ID].mode}")
+            print(f"*** pump mode is now: {spaman.cutModeName(spaman.facade.pumps[PUMP_ID].mode)}")
+            # new pump state name
+            SET_PUMP_STATE_NAME = spaman.cutModeName(spaman.facade.pumps[PUMP_ID].mode)
+            # new pump state id
+            for x in range(len(spaman.facade.pumps[PUMP_ID].modes)):
+                if SET_PUMP_STATE_NAME == spaman.facade.pumps[PUMP_ID].modes[x]:
+                    SET_PUMP_STATE = x
+                    break
+            # sending state updates to ioBroker
+            requests.get(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Switch?value={SET_PUMP_STATE}&ack=true")
+            #print(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Switch?value={SET_PUMP_STATE}&ack=true")
+            requests.get(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Modus?value={SET_PUMP_STATE_NAME}&ack=true")
+            #print(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Modus?value={SET_PUMP_STATE_NAME}&ack=true")
+        else:
+            print(f"*** nothing to do, pump mode is already: {spaman.cutModeName(spaman.facade.pumps[PUMP_ID].mode)}")
             # sending state updates to ioBroker
             requests.get(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Switch?value={NEW_PUMP_STATE}&ack=true")
             #print(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Switch?value={NEW_PUMP_STATE}&ack=true")
             requests.get(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Modus?value={NEW_PUMP_STATE_NAME}&ack=true")
             #print(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Modus?value={NEW_PUMP_STATE_NAME}&ack=true")
-        else:
-            print(f"*** nothing to do, pump mode is already: {spaman.facade.pumps[PUMP_ID].mode}")
         
         # ende
         print("*** end")

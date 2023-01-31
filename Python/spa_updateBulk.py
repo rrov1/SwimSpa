@@ -5,7 +5,7 @@ from geckolib import GeckoLocator
 
 CLIENT_ID = "<<any_guid>>"
 lSpas = ["SPA68:aa:bb:cc:dd:ee"]
-IOBROKER_BASE_URL = "http://<iobroker_ip_address>>:8087/setBulk"
+IOBROKER_BASE_URL = "http://<<iobroker_ip_address>>:8087/setBulk"
 
 dictEn2De = {'Away From Home': 'Abwesend',
           'Standard': 'Standard', 
@@ -54,9 +54,8 @@ for nSpaNum in range(len(lSpas)):
     # Pumpen
     print('sending pumps')
     for pump in facade.pumps:
-        print(f"{pump.name}")
-        if (pump.name != "Waterfall"):
-            sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Pumpen.{}.Modus={}".format(nSpaNum, pump.key, pump.mode) + "&ack=true& "
+        print(f"{pump.name}: {pump.mode}, {pump.modes}")
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Pumpen.{}.Modus={}".format(nSpaNum, pump.key, pump.mode) + "&ack=true& "
     
     # Lichter
     print('sending lights')
