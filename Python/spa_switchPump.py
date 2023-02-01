@@ -53,7 +53,7 @@ async def main() -> None:
 
         if len(spaman.spa_descriptors) == 0:
             print("*** there were no spas found on your network.")
-            return
+            quit(-1)
 
         print("*** connecting to spa")
         await spaman.async_connect(spa_identifier=SPA_ID)
