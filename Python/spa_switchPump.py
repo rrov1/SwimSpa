@@ -23,7 +23,7 @@ print(f"Switching pump id {PUMP_ID}")
 NEW_PUMP_STATE = int(sys.argv[4])
 print(f"Switching pump to state id {NEW_PUMP_STATE}")
 IOBR_PUMP_CHANNEL = sys.argv[5]
-print(f"Got channel for update {IOBR_PUMP_CHANNEL}")
+print(f"Got channel for update: {IOBR_PUMP_CHANNEL}")
 
 class SampleSpaMan(GeckoAsyncSpaMan):
     """Sample spa man implementation"""

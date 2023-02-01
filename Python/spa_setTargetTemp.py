@@ -9,18 +9,31 @@ from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 # Anzahl Argumente prüfen
 if len(sys.argv) != 5:
     print("*** Wrong number of script arguments.")
-    print("*** call example: {sys.argv[0]} clientId spaId lightKey lightChannel")
+    print("*** call example: {sys.argv[0]} clientId spaId targetTemp targetTempDatapoint")
     quit(-1)
+
+def is_float(element: any) -> bool:
+    #If you expect None to be passed:
+    if element is None: 
+        return False
+    try:
+        float(element)
+        return True
+    except ValueError:
+        return False
 
 print("Total arguments passed:", len(sys.argv))
 CLIENT_ID = sys.argv[1]
 print(f"Connecting using client id {CLIENT_ID}")
 SPA_ID = sys.argv[2]
 print(f"Connecting to spa id {SPA_ID}")
-LIGHT_KEY = sys.argv[3]
-print(f"Switching light: {LIGHT_KEY}")
-IOBR_LIGHT_CHANNEL = sys.argv[4]
-print(f"Got channel for update: {IOBR_LIGHT_CHANNEL}")
+TARGET_TEMP = sys.argv[3]
+if (not is_float(TARGET_TEMP)):
+    print(f"error: argument {TARGET_TEMP} is not a float")
+    quit(-1)
+print(f"New target temp: {TARGET_TEMP}")
+IOBR_TARGET_TEMP_DP = sys.argv[4]
+print(f"Got datapoint to update: {IOBR_TARGET_TEMP_DP}")
 
 class SampleSpaMan(GeckoAsyncSpaMan):
     """Sample spa man implementation"""
@@ -48,39 +61,26 @@ async def main() -> None:
         # Wait for the facade to be ready
         await spaman.wait_for_facade()
 
-        if len(spaman.facade.lights) > 0:
-            print(f"*** light count: {len(spaman.facade.lights)}")
+        if spaman.facade.water_heater.is_present:
+            print(f"*** water heater present")
         else:
-            print(f"*** current light mode: {spaman.facade.lights[0].is_on}")
-            print(f"error: no pumps returned from geckolib")
+            print(f"error: no water heater present returned from geckolib")
             quit(-1)
+        
+        print(f"*** current target temp: {spaman.facade.water_heater.target_temperature}")
 
-        # search for light based on key
-        keyNotFound = True
-        for light in spaman.facade.lights:
-            if LIGHT_KEY == light.key:
-                print(f"*** found light with key {LIGHT_KEY} and name: {light.name} with state {light.is_on}")
-                keyNotFound = False
-                if light.is_on:
-                    print(f"*** switching light off")
-                    await spaman.facade.lights[0].async_turn_off()
-                else:
-                    print(f"*** switching light on")
-                    await spaman.facade.lights[0].async_turn_on()
-                await asyncio.sleep(1)
-                newLightMode = light.is_on
-                break
+        if float(spaman.facade.water_heater.target_temperature) != float(TARGET_TEMP):
+            await spaman.facade.water_heater.async_set_target_temperature(TARGET_TEMP)
+            await asyncio.sleep(1)
+            print(f"*** target temp is now: {spaman.facade.water_heater.target_temperature}")
+        else:
+            print(f"*** new target temp is identical to current, nothing to do")
         
-        if keyNotFound:
-            print(f"error: light with key: {LIGHT_KEY} not found")
-            quit(-1)
-        
-        print(f"*** light mode is now: {newLightMode}")
         # sending state updates to ioBroker
-        requests.get(f"{IOBROKER_BASE_URL}{IOBR_LIGHT_CHANNEL}.Switch?value={str(newLightMode).lower()}&ack=true")
-        #print(f"{IOBROKER_BASE_URL}{IOBR_LIGHT_CHANNEL}.Switch?value={str(newLightMode).lower()}&ack=true")
-        requests.get(f"{IOBROKER_BASE_URL}{IOBR_LIGHT_CHANNEL}.Modus?value={str(newLightMode).lower()}&ack=true")
-        #print(f"{IOBROKER_BASE_URL}{IOBR_LIGHT_CHANNEL}.Modus?value={str(newLightMode).lower()}&ack=true")
+        requests.get(f"{IOBROKER_BASE_URL}{IOBR_TARGET_TEMP_DP}?value={str(spaman.facade.water_heater.target_temperature)}&ack=true")
+        #print(f"{IOBROKER_BASE_URL}{IOBR_TARGET_TEMP_DP}?value={str(spaman.facade.water_heater.target_temperature)}&ack=true")
+        requests.get(f"{IOBROKER_BASE_URL}{IOBR_TARGET_TEMP_DP}?value={str(spaman.facade.water_heater.target_temperature)}&ack=true")
+        #print(f"{IOBROKER_BASE_URL}{IOBR_TARGET_TEMP_DP}?value={str(spaman.facade.water_heater.target_temperature)}&ack=true")
 
         # ende
         print("*** end")
