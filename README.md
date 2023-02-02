@@ -1,5 +1,15 @@
 # ioBroker Skript Integration von Gecko Alliance spa pack systems bzw. in.touch2 mit geckolib
 
+## Funktionsumfang
+
+* [X] Unterstützung mehrere Spa Controller
+* [X] Bereitstellen von Datenpunkten mit der Konfiguration des Spa Controllers
+* [X] Bereistellen von Datenpunkten mit aktuellen Laufzeitinformationen
+* [X] Schalten der Pumpen
+* [X] Schalten der Beleuchtung
+* [ ] Einstellen der Zieltemperatur
+* [ ] Einstellen des Wasserpflegemodus
+
 ## Installation/Update
 
 ### gazoodle/geckolib (github)
@@ -95,6 +105,13 @@ crontab Eintrag:
 
 Werden bei ändern eines Datenpunktes zum Schalten von Pumpe oder Licht per Javascript ausgelöst.
 
+
+| **Skriptname**       | **Zweck**                 |
+| ---------------------- | --------------------------- |
+| spa_switchPump.py    | Schalten der Pumpen       |
+| spa_toggleLight.py   | Schalten der Beleuchtung  |
+| spa_setTargetTemp.py | Setzen der Zieltemperatur |
+
 # Todo's
 
 * Momentan ist der Pfad zu den Datenpunkten in den Python Scripten noch fest codiert - umstellen auf Parameter nötig
@@ -102,6 +119,6 @@ Werden bei ändern eines Datenpunktes zum Schalten von Pumpe oder Licht per Java
 * Alle Python Skripte sollen ohne Konstanten aufrufbar sein
 * Statt cron soll der regelmäßige Aufruf mit ioBroker Schedule möglich sein
 * spa_config.py umstellen von set() auf setBulk() (Simpe Rest API Aufrufe)
-* Status der Erreichbarkeit des Spa in Datenpunkt darstellen (Ebene Netzwerk, Online/Offline), sowie Fehler bei letzten Kommando 
+* Status der Erreichbarkeit des Spa in Datenpunkt darstellen (Ebene Netzwerk, Online/Offline), sowie Fehler bei letzten Kommando
 * Richtiges Discovery der Eigenschaften des Spa Controllers anstatt feste Anlage der Datenpunkte via Skript
 * ...
