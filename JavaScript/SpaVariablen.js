@@ -125,35 +125,69 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             def: "°C"
         });
 
-        createState(BASE_FOLDER + "." + nCurDev + ".AktuelleTemperatur", {
-            read: true, 
-            write: true, 
-            name: "AktuelleTemperatur", 
-            type: "number", 
-            role: "value.temperature",
-            desc: "Aktuelle Temperatur",
-            def: -1
-        });
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".AktuelleTemperatur";
+        if (!existsState(objectId)) {
+            createState(objectId, {
+                read: true, 
+                write: true, 
+                name: "AktuelleTemperatur", 
+                type: "number", 
+                role: "value.temperature",
+                desc: "Aktuelle Temperatur",
+                def: -1
+            });
+        } else {
+            // Korrektur write Attribut
+            objectData = getObject(objectId);
+            objectData.common.write = false;
+            setObject(objectId, objectData, function (err) {
+                if (err) log('cannot write object: ' + err);
+            });
+        }
+        
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".ZielTemperatur";
+        if (!existsState(objectId)) {
+            createState(objectId, {
+                read: true, 
+                write: true, 
+                name: "ZielTemperatur", 
+                type: "number", 
+                role: "value.temperature",
+                desc: "Zieltemperatur",
+                def: 35,
+                min: 15,
+                max: 40
+            });
+        } else {
+            // Korrektur Attribute
+            objectData = getObject(objectId);
+            objectData.common.def = 35;
+            objectData.common.min = 15;
+            objectData.common.max = 40;
+            setObject(objectId, objectData, function (err) {
+                if (err) log('cannot write object: ' + err);
+            });
+        }
 
-        createState(BASE_FOLDER + "." + nCurDev + ".ZielTemperatur", {
-            read: true, 
-            write: true, 
-            name: "ZielTemperatur", 
-            type: "number", 
-            role: "value.temperature",
-            desc: "Zieltemperatur",
-            def: -1
-        });
-
-        createState(BASE_FOLDER + "." + nCurDev + ".EchteZielTemperatur", {
-            read: true, 
-            write: true, 
-            name: "EchteZielTemperatur", 
-            type: "number", 
-            role: "value.temperature",
-            desc: "Echte Zieltemperatur",
-            def: -1
-        });
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".EchteZielTemperatur";
+        if (!existsState(objectId)) {
+            createState(objectId, {
+                read: true, 
+                write: true, 
+                name: "EchteZielTemperatur", 
+                type: "number", 
+                role: "value.temperature",
+                desc: "Echte Zieltemperatur",
+                def: -1
+            });
+        } else {
+            // Korrektur write Attribut
+            objectData = getObject(objectId);
+            objectData.common.write = false;
+            setObject(objectId, objectData, function (err) {
+                if (err) log('cannot write object: ' + err);
+            });
+        }
 
         createState(BASE_FOLDER + "." + nCurDev + ".Heizer", {
             read: true, 
@@ -513,26 +547,15 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             }
         }
 
-        // buttons for functions
-        createState(BASE_FOLDER + "." + nCurDev + ".enableHeating", {
-            read: true, 
-            write: true, 
-            name: "enableHeating", 
-            type: "boolean", 
-            role: "button",
-            desc: "Heizen aktivieren",
-            def: false
-        });
-
-        createState(BASE_FOLDER + "." + nCurDev + ".disableHeating", {
-            read: true, 
-            write: true, 
-            name: "disableHeating", 
-            type: "boolean", 
-            role: "button",
-            desc: "Heizen deaktivieren",
-            def: false
-        });
+        // remove previuosly created buttons for functions
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".enableHeating";
+        if (existsObject(objectId)) {
+            deleteState(objectId);
+        }
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".disableHeating";
+        if (existsObject(objectId)) {
+            deleteState(objectId);
+        }
 
         // Reminder
         setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Erinnerungen", {
