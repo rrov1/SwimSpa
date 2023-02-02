@@ -103,4 +103,5 @@ Werden bei ändern eines Datenpunktes zum Schalten von Pumpe oder Licht per Java
 * Statt cron soll der regelmäßige Aufruf mit ioBroker Schedule möglich sein
 * spa_config.py umstellen von set() auf setBulk() (Simpe Rest API Aufrufe)
 * Status der Erreichbarkeit des Spa in Datenpunkt darstellen (Ebene Netzwerk, Online/Offline), sowie Fehler bei letzten Kommando 
+* Richtiges Discovery der Eigenschaften des Spa Controllers anstatt feste Anlage der Datenpunkte via Skript
 * ...
