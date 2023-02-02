@@ -69,6 +69,14 @@ async def main() -> None:
         
         print(f"*** current target temp: {spaman.facade.water_heater.target_temperature}")
 
+        # check that new target temp is in temp range
+        if float(TARGET_TEMP) < float(spaman.facade.water_heater.min_temp):
+            print(f"error: new target temp ({TARGET_TEMP}) below minimum value ({spaman.facade.water_heater.min_temp})")
+            quit(-1)
+        if float(TARGET_TEMP) > float(spaman.facade.water_heater.max_temp):
+            print(f"error: new target temp ({TARGET_TEMP}) above maximum value ({spaman.facade.water_heater.max_temp})")
+            quit(-1)
+
         if float(spaman.facade.water_heater.target_temperature) != float(TARGET_TEMP):
             await spaman.facade.water_heater.async_set_target_temperature(TARGET_TEMP)
             await asyncio.sleep(1)
