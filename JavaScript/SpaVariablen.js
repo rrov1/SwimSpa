@@ -1,3 +1,4 @@
+
 // Pfade für die Datenpunkablage
 const BASE_FOLDER = "Datenpunkte.SwimSpa";
 const BASE_ADAPTER = "javascript.0";
@@ -11,18 +12,6 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
     var objectId, objectData;
 
     // globale Datenpunkte
-    createState(BASE_FOLDER + ".actualPowerConsumption", {
-        read: true, 
-        write: true, 
-        name: "actualPowerConsumption",
-        unit: 'W', 
-        type: "number", 
-        role: "value.power.consumption",
-        desc: "Momentanverbrauch in W",
-        def: 0,
-        min: 0
-    });
-    
     let spaStates = {};
     for (let nCurDev = 0; nCurDev < nDevCnt; nCurDev++) {
         spaStates[nCurDev.toString()] = nCurDev.toString();
@@ -58,6 +47,12 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         desc: "Automatisches Heizen aktiv/inaktiv",
         def: true
     });
+    // remove DP because no longer needed (energiefluss adapter 3.5.x now supports kW to W conversion)
+    objectId = BASE_ADAPTER + "." + BASE_FOLDER + ".actualPowerConsumption";
+    if (existsObject(objectId)) {
+        deleteState(objectId);
+    }
+    
 
     // GUID
     createState(BASE_FOLDER + ".ClientGUID", {
@@ -85,35 +80,65 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             "common" : {"name": "SpaController-" + nCurDev, "desc": "SpaController"}
         });
 
-        createState(BASE_FOLDER + "." + nCurDev + ".ID", {
-            read: true, 
-            write: true, 
-            name: "ID", 
-            type: "string", 
-            role: "info.address",
-            desc: "Geräte ID",
-            def: ""
-        });
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".ID";
+        if (!existsState(objectId)) {
+            createState(objectId, {
+                read: true, 
+                write: false, 
+                name: "ID", 
+                type: "string", 
+                role: "info.address",
+                desc: "Geräte ID",
+                def: ""
+            });
+        } else {
+            // Korrektur write Attribut
+            objectData = getObject(objectId);
+            objectData.common.write = false;
+            setObject(objectId, objectData, function (err) {
+                if (err) log('cannot write object: ' + err);
+            });
+        }
 
-        createState(BASE_FOLDER + "." + nCurDev + ".U_ID", {
-            read: true, 
-            write: true, 
-            name: "U_ID", 
-            type: "string", 
-            role: "info.address",
-            desc: "Geräte U_ID",
-            def: ""
-        });
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".U_ID";
+        if (!existsState(objectId)) {
+            createState(objectId, {
+                read: true, 
+                write: false, 
+                name: "U_ID", 
+                type: "string", 
+                role: "info.address",
+                desc: "Geräte U_ID",
+                def: ""
+            });
+        } else {
+            // Korrektur write Attribut
+            objectData = getObject(objectId);
+            objectData.common.write = false;
+            setObject(objectId, objectData, function (err) {
+                if (err) log('cannot write object: ' + err);
+            });
+        }
 
-        createState(BASE_FOLDER + "." + nCurDev + ".Name", {
-            read: true, 
-            write: true, 
-            name: "Name", 
-            type: "string", 
-            role: "info",
-            desc: "Name",
-            def: ""
-        });
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Name";
+        if (!existsState(objectId)) {
+            createState(objectId, {
+                read: true, 
+                write: false, 
+                name: "Name", 
+                type: "string", 
+                role: "info",
+                desc: "Name",
+                def: ""
+            });
+        } else {
+            // Korrektur write Attribut
+            objectData = getObject(objectId);
+            objectData.common.write = false;
+            setObject(objectId, objectData, function (err) {
+                if (err) log('cannot write object: ' + err);
+            });
+        }
         
         createState(BASE_FOLDER + "." + nCurDev + ".Temperatureinheit", {
             read: true, 
@@ -129,7 +154,7 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         if (!existsState(objectId)) {
             createState(objectId, {
                 read: true, 
-                write: true, 
+                write: false, 
                 name: "AktuelleTemperatur", 
                 type: "number", 
                 role: "value.temperature",
@@ -173,7 +198,7 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         if (!existsState(objectId)) {
             createState(objectId, {
                 read: true, 
-                write: true, 
+                write: false, 
                 name: "EchteZielTemperatur", 
                 type: "number", 
                 role: "value.temperature",
@@ -189,15 +214,25 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             });
         }
 
-        createState(BASE_FOLDER + "." + nCurDev + ".Heizer", {
-            read: true, 
-            write: true, 
-            name: "Heizer", 
-            type: "string", 
-            role: "info.status",
-            desc: "Aktivität Heizer",
-            def: ""
-        });
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Heizer";
+        if (!existsState(objectId)) {
+            createState(objectId, {
+                read: true, 
+                write: false, 
+                name: "Heizer", 
+                type: "string", 
+                role: "info.status",
+                desc: "Aktivität Heizer",
+                def: ""
+            });
+        } else {
+            // Korrektur write Attribut
+            objectData = getObject(objectId);
+            objectData.common.write = false;
+            setObject(objectId, objectData, function (err) {
+                if (err) log('cannot write object: ' + err);
+            });
+        }
 
         createState(BASE_FOLDER + "." + nCurDev + ".Wasserpflege", {
             read: true, 
@@ -510,7 +545,7 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             if (!existsObject(objectId)) {
                 createState(objectId, {
                     read: true, 
-                    write: true, 
+                    write: false, 
                     name: "Name", 
                     type: "string", 
                     role: "info.name",
@@ -530,7 +565,7 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             if (!existsObject(objectId)) {
                 createState(objectId, {
                     read: true, 
-                    write: true, 
+                    write: false, 
                     name: "State", 
                     type: "string", 
                     role: "state",
