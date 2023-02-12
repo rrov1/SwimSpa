@@ -1,4 +1,4 @@
-// Licht ein-/ausschalten  (regulärer Ausdruck um alle Pumpen im System zu steuern mit einer subscription)
+// Licht ein-/ausschalten  (regulärer Ausdruck um alle Lichter im System zu steuern mit einer subscription)
 on({id: /^javascript\.\d+\.Datenpunkte\.SwimSpa\.\d+\.Lichter\.LI\.Switch$/, change: "any", ack: false}, function (obj) {
     toggleLight(obj);
 });
