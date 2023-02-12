@@ -234,34 +234,81 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             });
         }
 
-        createState(BASE_FOLDER + "." + nCurDev + ".Wasserpflege", {
-            read: true, 
-            write: true, 
-            name: "Wasserpflege", 
-            type: "string", 
-            role: "info.status",
-            desc: "Status Wasserpflege",
-            def: ""
-        });
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Wasserpflege";
+        if (!existsState(objectId)) {
+            createState(objectId, {
+                read: true, 
+                write: true, 
+                name: "Wasserpflege", 
+                type: "string", 
+                role: "info.status",
+                desc: "Status Wasserpflege",
+                def: ""
+            });
+        } else {
+            // Korrektur write Attribut
+            objectData = getObject(objectId);
+            objectData.common.write = false;
+            setObject(objectId, objectData, function (err) {
+                if (err) log('cannot write object: ' + err);
+            });
+        }
 
-        createState(BASE_FOLDER + "." + nCurDev + ".WasserpflegeIndex", {
-            read: true, 
-            write: true, 
-            name: "WasserpflegeIndex", 
-            type: "number", 
-            role: "info.status",
-            desc: "Status Wasserpflege (Index)",
-            def: -1
-        });
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".WasserpflegeIndex";
+        if (!existsState(objectId)) {
+            createState(objectId, {
+                read: true, 
+                write: true, 
+                name: "WasserpflegeIndex", 
+                type: "number", 
+                role: "info.status",
+                desc: "Status Wasserpflege (Index)",
+                def: -1
+            });
+        } else {
+            // Korrektur write Attribut
+            objectData = getObject(objectId);
+            objectData.common.write = false;
+            setObject(objectId, objectData, function (err) {
+                if (err) log('cannot write object: ' + err);
+            });
+        }
 
-        createState(BASE_FOLDER + "." + nCurDev + ".WasserpflegeModi", {
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".WasserpflegeModi";
+        if (!existsState(objectId)) {
+            createState(objectId, {
+                read: true, 
+                write: true, 
+                name: "WasserpflegeModi", 
+                type: "string", 
+                role: "text",
+                desc: "Auswählbare Wasserpflegemodi",
+                def: ""
+            });
+        } else {
+            // Korrektur write Attribut
+            objectData = getObject(objectId);
+            objectData.common.write = false;
+            setObject(objectId, objectData, function (err) {
+                if (err) log('cannot write object: ' + err);
+            });
+        }
+
+        createState(BASE_FOLDER + "." + nCurDev + ".WasserpflegeSwitch", {
             read: true, 
             write: true, 
-            name: "WasserpflegeModi", 
-            type: "string", 
-            role: "text",
-            desc: "Auswählbare Wasserpflegemodi",
-            def: ""
+            name: "Wasserpflegemodusschalter",
+            type: 'number',
+            role: 'indicator',
+            states: {
+                0: "Abwesend",
+                1: "Standard",
+                2: "Energiesparen",
+                3: "Energiesparen Plus",
+                4: "Wochenende"
+            },
+            desc: "Auswahl des aktiven Wasserpflegemodus",
+            def: 0
         });
 
         // Pumpen
