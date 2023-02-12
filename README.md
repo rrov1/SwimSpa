@@ -7,7 +7,7 @@
 * [X] Bereistellen von Datenpunkten mit aktuellen Laufzeitinformationen
 * [X] Schalten der Pumpen
 * [X] Schalten der Beleuchtung
-* [ ] Einstellen der Zieltemperatur
+* [X] Einstellen der Zieltemperatur
 * [ ] Einstellen des Wasserpflegemodus
 
 ## Installation/Update
@@ -121,4 +121,5 @@ Werden bei ändern eines Datenpunktes zum Schalten von Pumpe oder Licht per Java
 * spa_config.py umstellen von set() auf setBulk() (Simpe Rest API Aufrufe)
 * Status der Erreichbarkeit des Spa in Datenpunkt darstellen (Ebene Netzwerk, Online/Offline), sowie Fehler bei letzten Kommando
 * Richtiges Discovery der Eigenschaften des Spa Controllers anstatt feste Anlage der Datenpunkte via Skript
+* Das setzen der Zieltemperatur ist empfindlich ggü. mehreren schnell auseinanderfolgenden Wertänderungen. Momentan am besten einen Slider nutzen, der eine Funktion "Update value on release" untersützt, so dass der DP nur einmal geändert wird. Das Script braucht immer ein paar Sekunden bis der Wert im Hintergrund gesetzt wurde.
 * ...
