@@ -55,11 +55,10 @@ Schritt 1: Erstellen der Datenpunkte
 * Skript SpaVariablen.js einspielen und Konfiguration anpassen
 
 
-| **Variable** | **Verwendungszweck/Wertcol**                                                                                                |
+| **Variable** | **Verwendungszweck/Wert**                                                                                                |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | BASE_ADAPTER | Basispfad zum Adapter unter dem die Datenpunkte angelegt werden. Standard ist der erste Javascript Adapter: "javascript.0". |
 | BASE_FOLDER  | Basispfad unter dem die Datenpunkte angelegt werden sollen, Standardwert ist: "Datenpunkte.SwimSpa"                         |
-|              |                                                                                                                             |
 
 Um die notwendigen Datenpunkte zu erstellen müssen die Parameter der Funktion createDatapoints() noch angepasst werden:
 

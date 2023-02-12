@@ -14,6 +14,16 @@ dictEn2De = {'Away From Home': 'Abwesend',
           'Weekender': 'Wochenende'
 }
 
+def cutModeName(modeString):
+    # correct mode string in case geckolib returns longer strings than in modes collection
+    if modeString == "OFF":
+        return "OFF"
+    if modeString == "HIGH":
+        return "HI"
+    if modeString == "LOW":
+        return "LO"
+    return modeString
+
 for nSpaNum in range(len(lSpas)):
     facade = GeckoLocator.find_spa(CLIENT_ID, lSpas[nSpaNum]).get_facade(False)
     print(f"Connecting to {facade.name} ", end="", flush=True)
@@ -56,12 +66,21 @@ for nSpaNum in range(len(lSpas)):
     for pump in facade.pumps:
         print(f"{pump.name}: {pump.mode}, {pump.modes}")
         sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Pumpen.{}.Modus={}".format(nSpaNum, pump.key, pump.mode) + "&ack=true& "
+        # new pump state name
+        SET_PUMP_STATE_NAME = cutModeName(pump.mode)
+        # new pump state id
+        for x in range(len(pump.modes)):
+            if SET_PUMP_STATE_NAME == pump.modes[x]:
+                SET_PUMP_STATE = x
+                break
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Pumpen.{}.Switch={}".format(nSpaNum, pump.key, SET_PUMP_STATE) + "&ack=true& "
     
     # Lichter
     print('sending lights')
     for light in facade.lights:
         print(f"{light.name}")
         sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Lichter.{}.Is_On={}".format(nSpaNum, light.key, str(light.is_on).lower()) + "&ack=true& "
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Lichter.{}.Switch={}".format(nSpaNum, light.key, str(light.is_on).lower()) + "&ack=true& "
     
     # Sensoren
     print('sending sensors')
