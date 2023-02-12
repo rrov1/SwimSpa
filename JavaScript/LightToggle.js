@@ -1,5 +1,5 @@
-// Licht ein-/ausschalten
-on({id: "javascript.0.Datenpunkte.SwimSpa.0.Lichter.LI.Switch", change: "any", ack: false}, function (obj) {
+// Licht ein-/ausschalten  (regulärer Ausdruck um alle Pumpen im System zu steuern mit einer subscription)
+on({id: /^javascript\.\d+\.Datenpunkte\.SwimSpa\.\d+\.Lichter\.LI\.Switch$/, change: "any", ack: false}, function (obj) {
     toggleLight(obj);
 });
 
@@ -17,6 +17,7 @@ function toggleLight(obj) {
     console.log("*** light key: " + lightKey);
     
     // spa_toggleLight.py clientId spaId lightKey lightChannel
+    //console.log('python3 spa_toggleLight.py ' + clientId + " " + spaId + " " + lightKey + " " + obj.channelId);
     exec('python3 spa_toggleLight.py ' + clientId + " " + spaId + " " + lightKey + " " + obj.channelId, function (error, stdout, stderr) {
         console.log('*** stdout: ' + stdout);
         if (error !== null) {

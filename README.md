@@ -106,11 +106,11 @@ crontab Eintrag:
 Werden bei ändern eines Datenpunktes zum Schalten von Pumpe oder Licht per Javascript ausgelöst.
 
 
-| **Skriptname**       | **Zweck**                 |
-| ---------------------- | --------------------------- |
-| spa_switchPump.py    | Schalten der Pumpen       |
-| spa_toggleLight.py   | Schalten der Beleuchtung  |
-| spa_setTargetTemp.py | Setzen der Zieltemperatur |
+| **Zweck**                 | **Javascript**              | **Python Skript** |
+| ------------------------- | --------------------------- | --------------------------- |
+| Schalten der Pumpen       | PumpSwitches.js             | spa_switchPump.py |
+| Schalten der Beleuchtung  | LightToggle.js              | spa_toggleLight.py |
+| Setzen der Zieltemperatur | TargetTemp.js               | spa_setTargetTemp.py |
 
 # Todo's
 

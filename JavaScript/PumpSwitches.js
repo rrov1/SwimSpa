@@ -1,15 +1,5 @@
-// Pumpe 1 ein-/ausschalten
-on({id: "javascript.0.Datenpunkte.SwimSpa.0.Pumpen.P1.Switch", change: "any", ack: false}, function (obj) {
-    switchPump(obj);
-});
-
-// Pumpe 2 ein-/ausschalten
-on({id: "javascript.0.Datenpunkte.SwimSpa.0.Pumpen.P2.Switch", change: "any", ack: false}, function (obj) {
-    switchPump(obj);
-});
-
-// Pumpe 3 ein-/ausschalten
-on({id: "javascript.0.Datenpunkte.SwimSpa.0.Pumpen.P3.Switch", change: "any", ack: false}, function (obj) {
+// Pumpen ein-/ausschalten (regulärer Ausdruck um alle Pumpen im System zu steuern mit einer subscription)
+on({id: /^javascript\.\d+\.Datenpunkte\.SwimSpa\.\d+\.Pumpen\.P\d+\.Switch$/, change: "any", ack: false}, function (obj) {
     switchPump(obj);
 });
 
