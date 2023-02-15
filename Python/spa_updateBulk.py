@@ -34,18 +34,20 @@ for nSpaNum in range(len(lSpas)):
     print(" connected")
 
     # Do some things with the facade
-    print(f"Water heater : {facade.water_heater}")
+    print(f"water heater: {facade.water_heater}")
 
     #
     sJson2Send = ""
-    #sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}={}".format(, ) + "& "
     
     # Temperaturen
     print(f'sending temp and heater ops')
-    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Temperatureinheit={}".format(nSpaNum, urllib.parse.quote(facade.water_heater.temperature_unit)) + "&ack=true& "
-    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.AktuelleTemperatur={}".format(nSpaNum, round(facade.water_heater.current_temperature, 2)) + "&ack=true& "
-    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.ZielTemperatur={}".format(nSpaNum, round(facade.water_heater.target_temperature, 2)) + "&ack=true& "
-    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.EchteZielTemperatur={}".format(nSpaNum, round(facade.water_heater.real_target_temperature, 2)) + "&ack=true& "
+    # temp value must be within min/max temp +/-10 degrees
+    if float(facade.water_heater.current_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.current_temperature) < (float(facade.water_heater.max_temp) + 10):
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.AktuelleTemperatur={}".format(nSpaNum, round(facade.water_heater.current_temperature, 2)) + "&ack=true& "
+    if float(facade.water_heater.target_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.target_temperature) < (float(facade.water_heater.max_temp) + 10):
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.ZielTemperatur={}".format(nSpaNum, round(facade.water_heater.target_temperature, 2)) + "&ack=true& "
+    if float(facade.water_heater.real_target_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.real_target_temperature) < (float(facade.water_heater.max_temp) + 10):
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.EchteZielTemperatur={}".format(nSpaNum, round(facade.water_heater.real_target_temperature, 2)) + "&ack=true& "
     sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Heizer={}".format(nSpaNum, facade.water_heater.current_operation) + "&ack=true& "
     
     # Wasserprflege
@@ -94,6 +96,13 @@ for nSpaNum in range(len(lSpas)):
 
     sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
     print(sJson2Send)
-    oResponse = requests.post(IOBROKER_BASE_URL, data = sJson2Send)
-    print(oResponse.status_code)
-    #print(oResponse.text)
+    try:
+        oResponse = requests.post(IOBROKER_BASE_URL, data = sJson2Send)
+    except Exception as e:
+        print(e)
+        print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url")
+    else:
+        print(f"http response code: {oResponse.status_code}")
+        if oResponse.status_code != 200:
+            print("respose text:")
+            print(oResponse.text)
