@@ -5,7 +5,7 @@ from geckolib import GeckoLocator
 
 CLIENT_ID = "<<any_guid>>"
 lSpas = ["SPA68:aa:bb:cc:dd:ee"]
-IOBROKER_BASE_URL = "http://<iobroker_ip_address>>:8087/set/"
+IOBROKER_BASE_URL = "http://<iobroker_ip_address>>:8087/setBulk"
 
 for nSpaNum in range(len(lSpas)):
     facade = GeckoLocator.find_spa(CLIENT_ID, lSpas[nSpaNum]).get_facade(False)
@@ -16,35 +16,27 @@ for nSpaNum in range(len(lSpas)):
         print(".", end="", flush=True)
     print(" connected")
 
-    # Do some things with the facade
+    #
+    sJson2Send = ""
+
     # name and id
     print(f"identifier {facade.name}")
-    oResponse = requests.get(f"{IOBROKER_BASE_URL}javascript.0.Datenpunkte.SwimSpa.{nSpaNum}.Name?value={urllib.parse.quote(facade.name)}&ack=true")
-    if (oResponse.status_code != 200):
-        print(f"http error: {oResponse.status_code}")
+    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Name={}".format(nSpaNum, urllib.parse.quote(facade.name)) + "&ack=true& "
     print(f"identifier {facade.identifier}")
-    oResponse = requests.get(f"{IOBROKER_BASE_URL}javascript.0.Datenpunkte.SwimSpa.{nSpaNum}.ID?value={urllib.parse.quote(facade.identifier)}&ack=true")
-    if (oResponse.status_code != 200):
-        print(f"http error: {oResponse.status_code}")
+    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.ID={}".format(nSpaNum, urllib.parse.quote(facade.identifier)) + "&ack=true& "
     print(f"uid: {facade.unique_id}")
-    oResponse = requests.get(f"{IOBROKER_BASE_URL}javascript.0.Datenpunkte.SwimSpa.{nSpaNum}.U_ID?value={urllib.parse.quote(facade.unique_id)}&ack=true")
-    if (oResponse.status_code != 200):
-        print(f"http error: {oResponse.status_code}")
+    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.U_ID={}".format(nSpaNum, urllib.parse.quote(facade.unique_id)) + "&ack=true& "
     #
     print(f'Temperatureinheit {facade.water_heater.temperature_unit}')
-    requests.get(f"{IOBROKER_BASE_URL}javascript.0.Datenpunkte.SwimSpa.{nSpaNum}.Temperatureinheit?value={urllib.parse.quote(facade.water_heater.temperature_unit)}&ack=true")
+    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Temperatureinheit={}".format(nSpaNum, urllib.parse.quote(facade.water_heater.temperature_unit)) + "&ack=true& "
     #
     print(f"anzahl pumpen: {len(facade.pumps)}")
     for pump in facade.pumps:
         print(f"{pump.key}")
         print(f"{pump.name}")
-        oRespone = requests.get(f"{IOBROKER_BASE_URL}javascript.0.Datenpunkte.SwimSpa.{nSpaNum}.Pumpen.{pump.key}.Name?value={urllib.parse.quote(pump.name)}&ack=true")
-        if (oResponse.status_code != 200):
-            print(f"http error: {oResponse.status_code}")
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Pumpen.{}.Name={}".format(nSpaNum, pump.key, urllib.parse.quote(pump.name)) + "&ack=true& "
         print(f"{str(pump.modes)}")
-        oResponse = requests.get(f"""{IOBROKER_BASE_URL}javascript.0.Datenpunkte.SwimSpa.{nSpaNum}.Pumpen.{pump.key}.Modi?value={urllib.parse.quote(str(pump.modes))}&ack=true""")
-        if (oResponse.status_code != 200):
-            print(f"http error: {oResponse.status_code}")
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Pumpen.{}.Modi={}".format(nSpaNum, pump.key, urllib.parse.quote(str(pump.modes))) + "&ack=true& "
     #
     print(f"anzahl blowers: {len(facade.blowers)}")
     #
@@ -52,9 +44,7 @@ for nSpaNum in range(len(lSpas)):
     for light in facade.lights:
         print(f"{light.key}")
         print(f"{light.name}")
-        oResponse = requests.get(f"{IOBROKER_BASE_URL}javascript.0.Datenpunkte.SwimSpa.{nSpaNum}.Lichter.{light.key}.Name?value={urllib.parse.quote(light.name)}&ack=true")
-        if (oResponse.status_code != 200):
-            print(f"http error: {oResponse.status_code}")
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Lichter.{}.Name'={}".format(nSpaNum, light.key, urllib.parse.quote(light.name)) + "&ack=true& "
     #
     print(f"***anzahl Sensoren: {len(facade.sensors)}")
     for sensor in facade.sensors:
@@ -69,9 +59,7 @@ for nSpaNum in range(len(lSpas)):
         sKey = binary_sensor.key
         sKey = sKey.replace(" ", "_")
         sKey = sKey.replace(":", "_")
-        oResponse = requests.get(f"{IOBROKER_BASE_URL}javascript.0.Datenpunkte.SwimSpa.{nSpaNum}.Sensoren.{sKey}.Name?value={urllib.parse.quote(binary_sensor.name)}&ack=true")
-        if (oResponse.status_code != 200):
-            print(f"http error: {oResponse.status_code}")
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Sensoren.{}.Name={}".format(nSpaNum, sKey, urllib.parse.quote(binary_sensor.name)) + "&ack=true& "
     
     print(f"anzahl user devices: {len(facade.all_user_devices)}")
     # user_device brauchen wir nicht, Information doppelt
@@ -81,7 +69,17 @@ for nSpaNum in range(len(lSpas)):
     print(f"anzahl reminders: {len(facade.reminders)}")
     for reminder in facade.reminders:
         print(f"reminder: {reminder}")
-        oResponse = requests.get(f"""{IOBROKER_BASE_URL}javascript.0.Datenpunkte.SwimSpa.{nSpaNum}.Erinnerungen.{reminder[0]}?value={urllib.parse.quote('"' + str(reminder[1]) + '"')}&ack=true""")
-        if (oResponse.status_code != 200):
-            print(f"http error: {oResponse.status_code}")
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Erinnerungen.{}={}".format(nSpaNum, reminder[0], urllib.parse.quote(str(reminder[1]))) + "&ack=true& "
     
+    sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
+    print(sJson2Send)
+    try:
+        oResponse = requests.post(IOBROKER_BASE_URL, data = sJson2Send)
+    except Exception as e:
+        print(e)
+        print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url")
+    else:
+        print(f"http response code: {oResponse.status_code}")
+        if oResponse.status_code != 200:
+            print("respose text:")
+            print(oResponse.text)
