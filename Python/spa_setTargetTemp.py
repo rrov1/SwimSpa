@@ -3,7 +3,8 @@ import asyncio
 import logging
 import requests
 
-IOBROKER_BASE_URL = "http://<<iobroker_ip_address>>:8087/set/"
+IOBROKER_BASE_URL = "http://<<iobroker_ip_address>>:8087/setBulk"
+
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
 # Anzahl Argumente prüfen
@@ -84,12 +85,25 @@ async def main() -> None:
         else:
             print(f"*** new target temp is identical to current, nothing to do")
         
-        # sending state updates to ioBroker
-        requests.get(f"{IOBROKER_BASE_URL}{IOBR_TARGET_TEMP_DP}?value={str(spaman.facade.water_heater.target_temperature)}&ack=true")
-        #print(f"{IOBROKER_BASE_URL}{IOBR_TARGET_TEMP_DP}?value={str(spaman.facade.water_heater.target_temperature)}&ack=true")
-        requests.get(f"{IOBROKER_BASE_URL}{IOBR_TARGET_TEMP_DP}?value={str(spaman.facade.water_heater.target_temperature)}&ack=true")
-        #print(f"{IOBROKER_BASE_URL}{IOBR_TARGET_TEMP_DP}?value={str(spaman.facade.water_heater.target_temperature)}&ack=true")
+        #
+        sJson2Send = ""
 
+        # sending state updates to ioBroker
+        sJson2Send = sJson2Send + "{}={}".format(IOBR_TARGET_TEMP_DP, str(spaman.facade.water_heater.target_temperature)) + "&ack=true& "
+
+        sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
+        print(sJson2Send)
+        try:
+            oResponse = requests.post(IOBROKER_BASE_URL, data = sJson2Send)
+        except Exception as e:
+            print(e)
+            print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url")
+        else:
+            print(f"http response code: {oResponse.status_code}")
+            if oResponse.status_code != 200:
+                print("respose text:")
+                print(oResponse.text)
+        
         # ende
         print("*** end")
         return
