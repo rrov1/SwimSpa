@@ -35,11 +35,11 @@ IOBROKER_BASE_URL = "http://<<iobroker_ip_address>:8087/set/"
 ```
 
 
-| **Variable**      | **Verwendungszweck/Wert**                                                                                                                                                                                               |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CLIENT_ID         | GUID die von der geckolib im weiteren verwendet wird, falls nicht vorhanden, dann wird die im ioBroker hinterlegte GUID verwendet                                                                                       |
+| **Variable**      | **Verwendungszweck/Wert**    |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------- |
+| CLIENT_ID         | GUID die von der geckolib im weiteren verwendet wird, falls nicht vorhanden, dann wird die im ioBroker hinterlegte GUID verwendet |
 | lSpas             | Spa-ID der geckolib, wen mehrere in.touch2 Systeme im Netz sind, ggf. auch mehrere (Komma separierte Liste).<br /><br/>Hinweis: Die Spa-ID steht nach dem ersten ausführen von spa_config.py in einem der Datenpunkte. |
-| IOBROKER_BASE_URL | Hier muss die IP Adresse vom ioBroker eingetragen werden (für die Aktualisierung der Datenpunkte via Simple Rest API)                                                                                                  |
+| IOBROKER_BASE_URL | Hier muss die IP Adresse vom ioBroker eingetragen werden (für die Aktualisierung der Datenpunkte via Simple Rest API) |
 
 ### Javascript Skripte für ioBroker
 
@@ -55,8 +55,8 @@ Schritt 1: Erstellen der Datenpunkte
 * Skript SpaVariablen.js einspielen und Konfiguration anpassen
 
 
-| **Variable** | **Verwendungszweck/Wert**                                                                                                |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Variable** | **Verwendungszweck/Wert**                                                                                                     |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | BASE_ADAPTER | Basispfad zum Adapter unter dem die Datenpunkte angelegt werden. Standard ist der erste Javascript Adapter: "javascript.0". |
 | BASE_FOLDER  | Basispfad unter dem die Datenpunkte angelegt werden sollen, Standardwert ist: "Datenpunkte.SwimSpa"                         |
 
@@ -64,10 +64,10 @@ Um die notwendigen Datenpunkte zu erstellen müssen die Parameter der Funktion c
 
 
 | **Parameter** | **Wert**                                       |
-| --------------- | ------------------------------------------------ |
+| ------------- | ---------------------------------------------- |
 | 1             | Anzahl Spa Controller im Netz, typ. Weise: 1   |
 | 2             | Anzahl Pumpen pro Spa Controller, typ. Weise 3 |
-| 3             | Datenpukte für Wasserfall mit anlegen         |
+| 3             | Datenpukte für Wasserfall mit anlegen          |
 
 * Nach dem speichern, das Script 1x ausführen
 * Prüfen ob die Datenpunkte vorhanden sind
@@ -107,10 +107,10 @@ Werden bei ändern eines Datenpunktes zum Schalten von Pumpe oder Licht per Java
 
 | **Zweck**                    | **Javascript**              | **Python Skript**           |
 | ---------------------------- | --------------------------- | --------------------------- |
-| Schalten der Pumpen          | PumpSwitches.js             | spa_switchPump.py           |
-| Schalten der Beleuchtung     | LightToggle.js              | spa_toggleLight.py          |
-| Setzen der Zieltemperatur    | TargetTemp.js               | spa_setTargetTemp.py        |
-| Setzen des Wasserpflegemodus | WatercareMode.js            | spa_setWatercareMode.py     |
+| Schalten der Pumpen          | PumpSwitches.js             | spa_switchPump.py ClientGUID SpaId PumpId PumpstateId PumpChannelPath |
+| Schalten der Beleuchtung     | LightToggle.js              | spa_toggleLight.py ClientGUID SpaId LightKey LightChannelPath |
+| Setzen der Zieltemperatur    | TargetTemp.js               | spa_setTargetTemp.py ClientGUID SpaId TargetTemp TargetTempDatapointPath |
+| Setzen des Wasserpflegemodus | WatercareMode.js            | spa_setWatercareMode.py ClientGUID SpaId ... |
 
 # Todo's
 
@@ -118,7 +118,6 @@ Werden bei ändern eines Datenpunktes zum Schalten von Pumpe oder Licht per Java
 * Die URL vom ioBroker Rest API muss als Parameter mit übergeben werden
 * Alle Python Skripte sollen ohne Konstanten aufrufbar sein
 * Statt cron soll der regelmäßige Aufruf mit ioBroker Schedule möglich sein
-* spa_config.py umstellen von set() auf setBulk() (Simpe Rest API Aufrufe)
 * Status der Erreichbarkeit des Spa in Datenpunkt darstellen (Ebene Netzwerk, Online/Offline), sowie Fehler bei letzten Kommando
 * Richtiges Discovery der Eigenschaften des Spa Controllers anstatt feste Anlage der Datenpunkte via Skript
 * Das setzen der Zieltemperatur ist empfindlich ggü. mehreren schnell auseinanderfolgenden Wertänderungen. Momentan am besten einen Slider nutzen, der eine Funktion "Update value on release" untersützt, so dass der DP nur einmal geändert wird. Das Script braucht immer ein paar Sekunden bis der Wert im Hintergrund gesetzt wurde.
