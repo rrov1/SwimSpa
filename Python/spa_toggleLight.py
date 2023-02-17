@@ -3,7 +3,7 @@ import asyncio
 import logging
 import requests
 
-IOBROKER_BASE_URL = "http://<<iobroker_ip_address>>:8087/set/"
+IOBROKER_BASE_URL = "http://<<iobroker_ip_address>>:8087/setBulk"
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
 # Anzahl Argumente prüfen
@@ -76,11 +76,26 @@ async def main() -> None:
             quit(-1)
         
         print(f"*** light mode is now: {newLightMode}")
+
+        #
+        sJson2Send = ""
+
         # sending state updates to ioBroker
-        requests.get(f"{IOBROKER_BASE_URL}{IOBR_LIGHT_CHANNEL}.Switch?value={str(newLightMode).lower()}&ack=true")
-        #print(f"{IOBROKER_BASE_URL}{IOBR_LIGHT_CHANNEL}.Switch?value={str(newLightMode).lower()}&ack=true")
-        requests.get(f"{IOBROKER_BASE_URL}{IOBR_LIGHT_CHANNEL}.Modus?value={str(newLightMode).lower()}&ack=true")
-        #print(f"{IOBROKER_BASE_URL}{IOBR_LIGHT_CHANNEL}.Modus?value={str(newLightMode).lower()}&ack=true")
+        sJson2Send = sJson2Send + "{}.Switch={}".format(IOBR_LIGHT_CHANNEL, str(newLightMode).lower()) + "&ack=true& "
+        sJson2Send = sJson2Send + "{}.Modus={}".format(IOBR_LIGHT_CHANNEL, str(newLightMode).lower()) + "&ack=true& "
+
+        sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
+        #print(sJson2Send)
+        try:
+            oResponse = requests.post(IOBROKER_BASE_URL, data = sJson2Send)
+        except Exception as e:
+            print(e)
+            print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url")
+        else:
+            print(f"http response code: {oResponse.status_code}")
+            if oResponse.status_code != 200:
+                print("respose text:")
+                print(oResponse.text)
 
         # ende
         print("*** end")
