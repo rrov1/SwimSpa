@@ -515,15 +515,25 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             });
         }
 
-        createState(BASE_FOLDER + "." + nCurDev + ".Lichter.LI.Switch", {
-            read: true, 
-            write: true, 
-            name: "Switch", 
-            type: "boolean", 
-            role: "switch",
-            desc: "Lichtschalter",
-            def: false
-        });
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Lichter.LI.Switch";
+        if (!existsObject(objectId)) {
+            createState(objectId, {
+                read: true, 
+                write: true, 
+                name: "Switch", 
+                type: "boolean", 
+                role: "button",
+                desc: "Lichtschalter",
+                def: false
+            });
+        } else {
+            // Korrektur role Attribut
+            objectData = getObject(objectId);
+            objectData.common.role = "button";
+            setObject(objectId, objectData, function (err) {
+                if (err) log('cannot write object: ' + err);
+            });
+        }
 
         // Sensoren
         setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren", {
