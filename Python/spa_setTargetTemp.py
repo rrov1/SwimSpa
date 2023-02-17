@@ -92,7 +92,7 @@ async def main() -> None:
         sJson2Send = sJson2Send + "{}={}".format(IOBR_TARGET_TEMP_DP, str(spaman.facade.water_heater.target_temperature)) + "&ack=true& "
 
         sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
-        print(sJson2Send)
+        #print(sJson2Send)
         try:
             oResponse = requests.post(IOBROKER_BASE_URL, data = sJson2Send)
         except Exception as e:

@@ -72,7 +72,7 @@ for nSpaNum in range(len(lSpas)):
         sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Erinnerungen.{}={}".format(nSpaNum, reminder[0], urllib.parse.quote(str(reminder[1]))) + "&ack=true& "
     
     sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
-    print(sJson2Send)
+    #print(sJson2Send)
     try:
         oResponse = requests.post(IOBROKER_BASE_URL, data = sJson2Send)
     except Exception as e:

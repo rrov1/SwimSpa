@@ -3,7 +3,7 @@ import asyncio
 import logging
 import requests
 
-IOBROKER_BASE_URL = "http://<<iobroker_ip_address>>:8087/set/"
+IOBROKER_BASE_URL = "http://<<iobroker_ip_address>>:8087/setBulk"
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
@@ -73,6 +73,9 @@ async def main() -> None:
             print(f"error: no pumps returned from geckolib")
             quit(-1)
 
+        #
+        sJson2Send = ""
+
         if spaman.cutModeName(spaman.facade.pumps[PUMP_ID].mode) != NEW_PUMP_STATE_NAME:
             await spaman.facade.pumps[PUMP_ID].async_set_mode(NEW_PUMP_STATE_NAME)
             await asyncio.sleep(1)
@@ -85,18 +88,27 @@ async def main() -> None:
                     SET_PUMP_STATE = x
                     break
             # sending state updates to ioBroker
-            requests.get(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Switch?value={SET_PUMP_STATE}&ack=true")
-            #print(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Switch?value={SET_PUMP_STATE}&ack=true")
-            requests.get(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Modus?value={SET_PUMP_STATE_NAME}&ack=true")
-            #print(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Modus?value={SET_PUMP_STATE_NAME}&ack=true")
+            sJson2Send = sJson2Send + "{}.Switch={}".format(IOBR_PUMP_CHANNEL, SET_PUMP_STATE) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.Modus={}".format(IOBR_PUMP_CHANNEL, SET_PUMP_STATE_NAME) + "&ack=true& "
         else:
             print(f"*** nothing to do, pump mode is already: {spaman.cutModeName(spaman.facade.pumps[PUMP_ID].mode)}")
             # sending state updates to ioBroker
-            requests.get(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Switch?value={NEW_PUMP_STATE}&ack=true")
-            #print(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Switch?value={NEW_PUMP_STATE}&ack=true")
-            requests.get(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Modus?value={NEW_PUMP_STATE_NAME}&ack=true")
-            #print(f"{IOBROKER_BASE_URL}{IOBR_PUMP_CHANNEL}.Modus?value={NEW_PUMP_STATE_NAME}&ack=true")
+            sJson2Send = sJson2Send + "{}.Switch={}".format(IOBR_PUMP_CHANNEL, NEW_PUMP_STATE) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.Modus={}".format(IOBR_PUMP_CHANNEL, NEW_PUMP_STATE_NAME) + "&ack=true& "
         
+        sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
+        #print(sJson2Send)
+        try:
+            oResponse = requests.post(IOBROKER_BASE_URL, data = sJson2Send)
+        except Exception as e:
+            print(e)
+            print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url")
+        else:
+            print(f"http response code: {oResponse.status_code}")
+            if oResponse.status_code != 200:
+                print("respose text:")
+                print(oResponse.text)
+
         # ende
         print("*** end")
         return
