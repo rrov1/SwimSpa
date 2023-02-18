@@ -140,15 +140,25 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             });
         }
         
-        createState(BASE_FOLDER + "." + nCurDev + ".Temperatureinheit", {
-            read: true, 
-            write: true, 
-            name: "Temperatureinheit", 
-            type: "string", 
-            role: "info",
-            desc: "Temperatureinheit",
-            def: "°C"
-        });
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Temperatureinheit";
+        if (!existsState(objectId)) {
+            createState(objectId, {
+                read: true, 
+                write: false, 
+                name: "Temperatureinheit", 
+                type: "string", 
+                role: "info",
+                desc: "Temperatureinheit",
+                def: "°C"
+            });
+        } else {
+            // Korrektur write Attribut
+            objectData = getObject(objectId);
+            objectData.common.write = false;
+            setObject(objectId, objectData, function (err) {
+                if (err) log('cannot write object: ' + err);
+            });
+        }
 
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".AktuelleTemperatur";
         if (!existsState(objectId)) {
