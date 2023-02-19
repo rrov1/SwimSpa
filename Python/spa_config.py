@@ -30,6 +30,10 @@ for nSpaNum in range(len(lSpas)):
     print(f'Temperatureinheit {facade.water_heater.temperature_unit}')
     sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Temperatureinheit={}".format(nSpaNum, urllib.parse.quote(facade.water_heater.temperature_unit)) + "&ack=true& "
     #
+    print(f"Wasserpflegemodi")
+    if facade.water_care.mode != None:
+        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.WasserpflegeModi={}".format(nSpaNum, urllib.parse.quote(str(facade.water_care.modes))) + "&ack=true& "
+    #
     print(f"anzahl pumpen: {len(facade.pumps)}")
     for pump in facade.pumps:
         print(f"{pump.key}")

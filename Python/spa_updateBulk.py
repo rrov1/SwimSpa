@@ -33,9 +33,6 @@ for nSpaNum in range(len(lSpas)):
         print(".", end="", flush=True)
     print(" connected")
 
-    # Do some things with the facade
-    print(f"water heater: {facade.water_heater}")
-
     #
     sJson2Send = ""
     
@@ -60,7 +57,6 @@ for nSpaNum in range(len(lSpas)):
         print(".")
     if facade.water_care.mode != None:
         sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Wasserpflege={}".format(nSpaNum, facade.water_care.modes[facade.water_care.mode]) + "&ack=true& "
-        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.WasserpflegeModi={}".format(nSpaNum, facade.water_care.modes) + "&ack=true& "
         sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.WasserpflegeIndex={}".format(nSpaNum, facade.water_care.mode) + "&ack=true& "
     
     # Pumpen
