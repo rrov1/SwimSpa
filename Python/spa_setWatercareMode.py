@@ -83,6 +83,7 @@ async def main() -> None:
             # sending state updates to ioBroker
             sJson2Send = sJson2Send + "{}.WasserpflegeSwitch={}".format(IOBR_DEVICE_PATH, currentWatercareMode) + "&ack=true& "
             sJson2Send = sJson2Send + "{}.WasserpflegeIndex={}".format(IOBR_DEVICE_PATH, currentWatercareMode) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.Wasserpflege={}".format(IOBR_DEVICE_PATH, dictEn2De[spaman.facade.water_care.modes[currentWatercareMode]]) + "&ack=true& "
         else:
             print(f"*** changing watercare mode from \"{spaman.facade.water_care.modes[currentWatercareMode]}\" to: \"{spaman.facade.water_care.modes[NEW_WATERCAREMODE_IDX]}\"")
 
@@ -92,6 +93,7 @@ async def main() -> None:
             # sending state updates to ioBroker
             sJson2Send = sJson2Send + "{}.WasserpflegeSwitch={}".format(IOBR_DEVICE_PATH, NEW_WATERCAREMODE_IDX) + "&ack=true& "
             sJson2Send = sJson2Send + "{}.WasserpflegeIndex={}".format(IOBR_DEVICE_PATH, NEW_WATERCAREMODE_IDX) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.Wasserpflege={}".format(IOBR_DEVICE_PATH, dictEn2De[spaman.facade.water_care.modes[NEW_WATERCAREMODE_IDX]]) + "&ack=true& "
 
         sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
         print(sJson2Send)
