@@ -8,7 +8,8 @@
 * [X] Schalten der Pumpen
 * [X] Schalten der Beleuchtung
 * [X] Einstellen der Zieltemperatur
-* [ ] Einstellen des Wasserpflegemodus
+* [X] Einstellen des Wasserpflegemodus
+* [ ] ToDos unten umsetzen
 
 ## Installation/Update
 
@@ -110,7 +111,7 @@ Werden bei ändern eines Datenpunktes zum Schalten von Pumpe oder Licht per Java
 | Schalten der Pumpen          | PumpSwitches.js             | spa_switchPump.py ClientGUID SpaId PumpId PumpstateId PumpChannelPath |
 | Schalten der Beleuchtung     | LightToggle.js              | spa_toggleLight.py ClientGUID SpaId LightKey LightChannelPath |
 | Setzen der Zieltemperatur    | TargetTemp.js               | spa_setTargetTemp.py ClientGUID SpaId TargetTemp TargetTempDatapointPath |
-| Setzen des Wasserpflegemodus | WatercareMode.js            | spa_setWatercareMode.py ClientGUID SpaId ... |
+| Setzen des Wasserpflegemodus | WatercareMode.js            | spa_setWatercareMode.py ClientGUID SpaId waterCareModeIdx DevicePath |
 
 # Todo's
 
