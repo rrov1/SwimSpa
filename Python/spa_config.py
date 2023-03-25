@@ -1,89 +1,171 @@
+import sys
+import asyncio
+import logging
 import requests
-import urllib.parse
+import urllib
+from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-from geckolib import GeckoLocator
+VERSION = "0.2.0"
+print(f"{sys.argv[0]} Version: {VERSION}")
 
-CLIENT_ID = "<<any_guid>>"
-lSpas = ["SPA68:aa:bb:cc:dd:ee"]
-IOBROKER_BASE_URL = "http://<iobroker_ip_address>>:8087/setBulk"
+# Anzahl Argumente prüfen
+if len(sys.argv) != 4:
+    print("*** Wrong number of script arguments.\n")
+    print(f"*** call example: {sys.argv[0]} clientId ioBrSimpleRestApiUrl dpBasePath ")
+    quit(-1)
 
-for nSpaNum in range(len(lSpas)):
-    facade = GeckoLocator.find_spa(CLIENT_ID, lSpas[nSpaNum]).get_facade(False)
-    print(f"Connecting to {facade.name} ", end="", flush=True)
-    while not facade.is_connected:
-        # Could also be `await asyncio.sleep(1)`
-        facade.wait(1)
-        print(".", end="", flush=True)
-    print(" connected")
+print("total arguments passed:", len(sys.argv))
+CLIENT_ID = sys.argv[1]
+print(f"Connect using client id: {CLIENT_ID}")
+IOBRURL = sys.argv[2]
+print(f"ioBroker Simple Rest API URL: {IOBRURL}")
+IOB_DP_BASE_PATH = sys.argv[3]
+print(f"Base path to datapoints: {IOB_DP_BASE_PATH}")
 
-    #
-    sJson2Send = ""
 
-    # name and id
-    print(f"identifier {facade.name}")
-    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Name={}".format(nSpaNum, urllib.parse.quote(facade.name)) + "&ack=true& "
-    print(f"identifier {facade.identifier}")
-    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.ID={}".format(nSpaNum, urllib.parse.quote(facade.identifier)) + "&ack=true& "
-    print(f"uid: {facade.unique_id}")
-    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.U_ID={}".format(nSpaNum, urllib.parse.quote(facade.unique_id)) + "&ack=true& "
-    #
-    print(f'Temperatureinheit {facade.water_heater.temperature_unit}')
-    sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Temperatureinheit={}".format(nSpaNum, urllib.parse.quote(facade.water_heater.temperature_unit)) + "&ack=true& "
-    #
-    print(f"Wasserpflegemodi")
-    if facade.water_care.mode != None:
-        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.WasserpflegeModi={}".format(nSpaNum, urllib.parse.quote(str(facade.water_care.modes))) + "&ack=true& "
-    #
-    print(f"anzahl pumpen: {len(facade.pumps)}")
-    for pump in facade.pumps:
-        print(f"{pump.key}")
-        print(f"{pump.name}")
-        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Pumpen.{}.Name={}".format(nSpaNum, pump.key, urllib.parse.quote(pump.name)) + "&ack=true& "
-        print(f"{str(pump.modes)}")
-        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Pumpen.{}.Modi={}".format(nSpaNum, pump.key, urllib.parse.quote(str(pump.modes))) + "&ack=true& "
-    #
-    print(f"anzahl blowers: {len(facade.blowers)}")
-    #
-    print(f"anzahl lichter: {len(facade.lights)}")
-    for light in facade.lights:
-        print(f"{light.key}")
-        print(f"{light.name}")
-        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Lichter.{}.Name'={}".format(nSpaNum, light.key, urllib.parse.quote(light.name)) + "&ack=true& "
-    #
-    print(f"***anzahl Sensoren: {len(facade.sensors)}")
-    for sensor in facade.sensors:
-        print(f"{sensor.key}")
-        print(f"{sensor.name}")
-        print(f"{sensor.state}")
-    
-    print(f"***anzahl bin. Sensoren: {len(facade.binary_sensors)}")
-    for binary_sensor in facade.binary_sensors:
-        print(f"{binary_sensor.key}")
-        print(f"{binary_sensor.name}")
-        sKey = binary_sensor.key
-        sKey = sKey.replace(" ", "_")
-        sKey = sKey.replace(":", "_")
-        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Sensoren.{}.Name={}".format(nSpaNum, sKey, urllib.parse.quote(binary_sensor.name)) + "&ack=true& "
-    
-    print(f"anzahl user devices: {len(facade.all_user_devices)}")
-    # user_device brauchen wir nicht, Information doppelt
-    #for user_device in facade.all_user_devices:
-    #    print(f"user device: {user_device}")
-    
-    print(f"anzahl reminders: {len(facade.reminders)}")
-    for reminder in facade.reminders:
-        print(f"reminder: {reminder}")
-        sJson2Send = sJson2Send + "javascript.0.Datenpunkte.SwimSpa.{}.Erinnerungen.{}={}".format(nSpaNum, reminder[0], urllib.parse.quote(str(reminder[1]))) + "&ack=true& "
-    
-    sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
-    #print(sJson2Send)
-    try:
-        oResponse = requests.post(IOBROKER_BASE_URL, data = sJson2Send)
-    except Exception as e:
-        print(e)
-        print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url")
-    else:
-        print(f"http response code: {oResponse.status_code}")
-        if oResponse.status_code != 200:
-            print("respose text:")
-            print(oResponse.text)
+class SampleSpaMan(GeckoAsyncSpaMan):
+    async def handle_event(self, event: GeckoSpaEvent, **kwargs) -> None:
+        # Uncomment this line to see events generated
+        #print(f"{event}: {kwargs}")
+        pass
+
+
+async def main() -> None:
+    async with SampleSpaMan(CLIENT_ID, spa_address=None) as spaman:
+        print("*** looking for spas on your network ...")
+
+        # Wait for descriptors to be available
+        await spaman.wait_for_descriptors()
+
+        if len(spaman.spa_descriptors) == 0:
+            print("*** there were no spas found on your network.")
+            return
+
+        # get all spa names
+        allNames = []
+        for descriptor in spaman.spa_descriptors:
+            allNames.append(descriptor.name)
+        
+        mySpaDescriptors = []
+        # sort spa names and create a new spa descriptors array sorted by spa_name
+        for myName in sorted(allNames):
+            for descriptor in spaman.spa_descriptors:
+                if descriptor.name == myName:
+                    mySpaDescriptors.append(descriptor)
+
+        for nSpaNum in range(len(mySpaDescriptors)):
+            spa_descriptor = mySpaDescriptors[nSpaNum]
+            print(f"connecting to {spa_descriptor.name} at {spa_descriptor.ipaddress} with {spa_descriptor.identifier_as_string}")
+
+            await spaman.async_set_spa_info(
+                spa_descriptor.ipaddress,
+                spa_descriptor.identifier_as_string,
+                spa_descriptor.name,
+            )
+
+            # Wait for the facade to be ready
+            await spaman.wait_for_facade()
+
+            #
+            sJson2Send = ""
+
+            print(f"spa_state {spaman.spa_state}")
+
+            # name and id
+            print(f"identifier {spaman.facade.name}")
+            sJson2Send = sJson2Send + "{}.{}.Name={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.facade.name)) + "&ack=true& "
+            print(f"identifier {spa_descriptor.identifier_as_string}")
+            sJson2Send = sJson2Send + "{}.{}.ID={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spa_descriptor.identifier_as_string)) + "&ack=true& "
+            print(f"uid: {spaman.facade.unique_id}")
+            sJson2Send = sJson2Send + "{}.{}.U_ID={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.facade.unique_id)) + "&ack=true& "
+            
+            # some sensors
+            print(f"radio_sensor: {spaman.radio_sensor}")
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Signal.Name={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.radio_sensor.name)) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Signal.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.radio_sensor.state))) + "&ack=true& "
+            print(f"channel_sensor: {spaman.channel_sensor}")
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Channel.Name={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.channel_sensor.name)) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Channel.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.channel_sensor.state))) + "&ack=true& "
+            print(f"ping_sensor: {spaman.ping_sensor}")
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.Last_Ping.Name={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.ping_sensor.name)) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.Last_Ping.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.ping_sensor.state))) + "&ack=true& "
+            print(f"status_sensor: {spaman.status_sensor}")
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.Status.Name={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.status_sensor.name)) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.status_sensor.state)) + "&ack=true& "
+            
+            #
+            print(f'Heizung vorhanden {spaman.facade.water_heater.is_present}')
+            print(f'Temperatureinheit {spaman.facade.water_heater.temperature_unit}')
+            sJson2Send = sJson2Send + "{}.{}.Temperatureinheit={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.facade.water_heater.temperature_unit)) + "&ack=true& "
+            #
+            print(f"Wasserpflegemodi {spaman.facade.water_care.modes}")
+            sJson2Send = sJson2Send + "{}.{}.WasserpflegeModi={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.facade.water_care.modes))) + "&ack=true& "
+
+            #
+            print(f"anzahl pumpen: {len(spaman.facade.pumps)}")
+            for pump in spaman.facade.pumps:
+                print(f"pump key {pump.key}, name {pump.name}, modes {str(pump.modes)}")
+                sJson2Send = sJson2Send + "{}.{}.Pumpen.{}.Name={}".format(IOB_DP_BASE_PATH, nSpaNum, pump.key, urllib.parse.quote(pump.name)) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.{}.Pumpen.{}.Modi={}".format(IOB_DP_BASE_PATH, nSpaNum, pump.key, urllib.parse.quote(str(pump.modes))) + "&ack=true& "
+            #
+            print(f"anzahl blowers: {len(spaman.facade.blowers)}")
+            #
+            print(f"anzahl lichter: {len(spaman.facade.lights)}")
+            for light in spaman.facade.lights:
+                print(f"light key {light.key}, name {light.name}")
+                sJson2Send = sJson2Send + "{}.{}.Lichter.{}.Name'={}".format(IOB_DP_BASE_PATH, nSpaNum, light.key, urllib.parse.quote(light.name)) + "&ack=true& "
+            #
+            print(f"***anzahl Sensoren: {len(spaman.facade.sensors)}")
+            for sensor in spaman.facade.sensors:
+                print(f"sensor key {sensor.key}, name {sensor.name}, state {sensor.state}, unit_of_measurement {sensor.unit_of_measurement}")
+                sKey = sensor.key
+                sKey = sKey.replace(" ", "_")
+                sKey = sKey.replace(":", "_")
+                sJson2Send = sJson2Send + "{}.{}.Sensoren.{}.Name={}".format(IOB_DP_BASE_PATH, nSpaNum, sKey, urllib.parse.quote(sensor.name)) + "&ack=true& "
+            
+            print(f"***anzahl bin. Sensoren: {len(spaman.facade.binary_sensors)}")
+            for binary_sensor in spaman.facade.binary_sensors:
+                print(f"sensor key {binary_sensor.key}, name {binary_sensor.name}, is_on {binary_sensor.is_on}")
+                sKey = binary_sensor.key
+                sKey = sKey.replace(" ", "_")
+                sKey = sKey.replace(":", "_")
+                sJson2Send = sJson2Send + "{}.{}.Sensoren.{}.Name={}".format(IOB_DP_BASE_PATH, nSpaNum, sKey, urllib.parse.quote(binary_sensor.name)) + "&ack=true& "
+            
+            rm = spaman.facade.reminders_manager
+            print(f"anzahl reminders: {len(rm.reminders)}")
+            for reminder in rm.reminders:
+                print(f"reminder: {reminder}")
+                sJson2Send = sJson2Send + "{}.{}.Erinnerungen.{}={}".format(IOB_DP_BASE_PATH, nSpaNum, reminder[0], urllib.parse.quote(str(reminder[1]))) + "&ack=true& "
+
+            print(f"error sensor state {spaman.facade.error_sensor.state}")
+
+            sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
+            print(sJson2Send)
+            try:
+                oResponse = requests.post("{}/setBulk".format(IOBRURL), data = sJson2Send)
+            except Exception as e:
+                print(e)
+                print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url")
+            else:
+                print(f"http response code: {oResponse.status_code}")
+                if oResponse.status_code != 200:
+                    print("respose text:")
+                    print(oResponse.text)
+            
+            await asyncio.sleep(1)
+
+        # ende
+        print("*** end")
+        return
+
+if __name__ == "__main__":
+    # Install logging
+    stream_logger = logging.StreamHandler()
+    stream_logger.setLevel(logging.DEBUG)
+    stream_logger.setFormatter(
+        logging.Formatter("%(asctime)s> %(levelname)s %(message)s")
+    )
+    logging.getLogger().addHandler(stream_logger)
+    logging.getLogger().setLevel(logging.INFO)
+
+    asyncio.run(main())

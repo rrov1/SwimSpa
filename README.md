@@ -19,50 +19,39 @@ Quelle: [https://github.com/gazoodle/geckolib](https://github.com/gazoodle/gecko
 
 Voraussetzung zur Installation: Python3&Pip (am besten unter einem Linux)
 
-Installation: pip install geckolib
+Installation: sudo pip install geckolib
 
-Update: pip install geckolib --upgrade
+Update: sudo pip install geckolib --upgrade
 
 ### Python Skripte
 
-Alle Python Skripte befinden aus dem Repository (Ordner: [Python](Python)) in einem Verzeichnis bereitstellen.
+Alle Python Skripte  aus dem Repository (Ordner: [Python](Python)) in einem Verzeichnis bereitstellen. Die Python-Skripte werden von den Javascript-Skripten aus aufgerufen mit den nötigen Parametern.
 
-Momentan sind in den Scripten noch einige Parameter fest codiert, welche vor der Nutzung angepasst werden müssen (wird in zukünftigen Versionen entfallen). Beispiel spa_config.py:
-
-```
-CLIENT_ID = "any_guid"
-lSpas = ["SPA68:aa:bb:cc:dd:ee"]
-IOBROKER_BASE_URL = "http://<<iobroker_ip_address>:8087/set/"
-```
-
-
-| **Variable**      | **Verwendungszweck/Wert**    |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------- |
-| CLIENT_ID         | GUID die von der geckolib im weiteren verwendet wird, falls nicht vorhanden, dann wird die im ioBroker hinterlegte GUID verwendet |
-| lSpas             | Spa-ID der geckolib, wen mehrere in.touch2 Systeme im Netz sind, ggf. auch mehrere (Komma separierte Liste).<br /><br/>Hinweis: Die Spa-ID steht nach dem ersten ausführen von spa_config.py in einem der Datenpunkte. |
-| IOBROKER_BASE_URL | Hier muss die IP Adresse vom ioBroker eingetragen werden (für die Aktualisierung der Datenpunkte via Simple Rest API) |
 
 ### Javascript Skripte für ioBroker
 
-Voraussetzung:
+#### Voraussetzungen
 
 * Javascript/Blockly & Simple Rest API Adapter
 * Einstellung des Javascript Adapters:
   * Option: Enable Command "setObject" - ist aktiviert
   * Option: Enable Command "exec" - ist aktiviert
 
-Schritt 1: Erstellen der Datenpunkte
+#### Schritt 1: Skript SpaGlobal.js bereitstellen
 
-* Skript SpaVariablen.js einspielen und Konfiguration anpassen
+* "Expert Mode" im Adapter aktivieren, damit der Ordner "global" angezeigt wird
+* im Ordner "global" ein neues Skript "SpaGlobal" anlegen und den Inhalt hineinkopieren und evtl. Konfiguration anpassen:
 
-
-| **Variable** | **Verwendungszweck/Wert**                                                                                                     |
+| **Variable** | **Verwendungszweck/Wert** |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | BASE_ADAPTER | Basispfad zum Adapter unter dem die Datenpunkte angelegt werden. Standard ist der erste Javascript Adapter: "javascript.0". |
-| BASE_FOLDER  | Basispfad unter dem die Datenpunkte angelegt werden sollen, Standardwert ist: "Datenpunkte.SwimSpa"                         |
+| BASE_FOLDER  | Basispfad unter dem die Datenpunkte angelegt werden sollen, Standardwert ist: "Datenpunkte.SwimSpa" |
+| SPA_EXECUTEABLE | Auszuführendes Programm, Standard ist "python3" |
 
-Um die notwendigen Datenpunkte zu erstellen müssen die Parameter der Funktion createDatapoints() noch angepasst werden:
+#### Schritt 2: Erstellen bzw. Aktualisieren der Datenpunkte
 
+* Skript SpaVariablen.js einspielen
+* den Aufruf der Funktion createDatapoints() anpassen:
 
 | **Parameter** | **Wert**                                       |
 | ------------- | ---------------------------------------------- |
@@ -73,38 +62,21 @@ Um die notwendigen Datenpunkte zu erstellen müssen die Parameter der Funktion c
 * Nach dem speichern, das Script 1x ausführen
 * Prüfen ob die Datenpunkte vorhanden sind
 
-Schritt 2: Weitere Skripte anlegen
+#### Schritt 3: Skripte für Spa Controller Konfiguration und Update der Zustände
 
-Die weiteren Scripte im Ordner Javascript müssen ebenfalls erstellt werden. Wichtig, wenn im vorhergehenden Schritt bei BASE_ADAPTER bzw. BASE_FOLDER abweichende Pfade angegeben worden sind, müssen diese in den on()-Aufrufen ebenfalls angepasst werden.
+* Neuen Ordner "Spa" im JavaScript-Adapter anlegen (um die Skripte etwas zu sortieren)
+* Skript: SpaUpdateConfig.js erstellen (das zugehörige Pytho-Skript ist: spa_config.py clientId restApiUrl dpBasePath)
+* Die Javascript Funktion: updateSpaConfig() wird beim speichern 1x ausgeführt, danach aller 6h.
+* Prüfen ob die Datenpunkte die eher statische Konfigurationswerte darstellen, wie (z.B.: Temepratureinheit, ID, U_ID) aktualisiert worden sind
+* Skcript: SpaUpdateValues.js erstellen (das zugehörige Python-Skript ist: spa_updateBulk.py clientId restApiUrl spaIdList dpBasePath)
+* Das Skript wird minütlich aufgerufen und aktualisiert alle anderen Werte wie z.B. die Wassertemperaturen, Pumpenstatus, Licht usw.
 
-Hinweis: Wenn die Python Scripte in einem speziellen Ordner liegen, dann muss der Pfad ggf. im Javascript-Skript im exec()-Aufruf angepasst werden.
+**Hinweis:** Wenn die Python Scripte in einem speziellen Ordner liegen, dann muss der Pfad ggf. im Javascript-Skript im exec()-Aufruf angepasst werden.
 
-## Nutzung
+#### Schritt 4: Weitere Skripte nach Bedarf
 
-### spa_config.py Aufrufe
-
-Das Skript liefert relativ statische Werte der Spa Konfiguration zurück. Es muss nach der Installation einmal aufgeufen werden (z.B. auch manuell), danach sollte es 1x am Tag bis max. 4x am Tag laufen (aller 6h). Dies kann z.B. mittels eines cron Aufrufs erfolgen:
-
-crontab Eintrag:
-
-```
-0 5 * * * python3 ~/spa_config.py >/dev/null 2>&1
-```
-
-### spa_updateBulk.py Aufrufe
-
-Das Skript liefert laufend den Status für die Datenpunkte. Es sollte minütlich aufgerufen werden (kürzere Taktung ergibt eines schnellere Reaktion auf manuelle Bedienungen - ggf. selbst testen).
-
-crontab Eintrag:
-
-```
-* * * * * python3 ~/spa_updateBulk.py  >/dev/null 2>&1
-```
-
-### Sonstige Scripte:
-
-Werden bei ändern eines Datenpunktes zum Schalten von Pumpe oder Licht per Javascript ausgelöst.
-
+* Falls nicht vorhanden einen neuen Ordner "Spa" im JavaScript-Adapter anlegen (um die Skripte etwas zu sortieren)
+* Skripte bereitstellen
 
 | **Zweck**                    | **Javascript**              | **Python Skript**           |
 | ---------------------------- | --------------------------- | --------------------------- |
@@ -112,6 +84,9 @@ Werden bei ändern eines Datenpunktes zum Schalten von Pumpe oder Licht per Java
 | Schalten der Beleuchtung     | LightToggle.js              | spa_toggleLight.py ClientGUID SpaId LightKey LightChannelPath |
 | Setzen der Zieltemperatur    | TargetTemp.js               | spa_setTargetTemp.py ClientGUID SpaId TargetTemp TargetTempDatapointPath |
 | Setzen des Wasserpflegemodus | WatercareMode.js            | spa_setWatercareMode.py ClientGUID SpaId waterCareModeIdx DevicePath |
+
+
+**Hinweis:** Wenn im vorhergehenden Schritt bei BASE_ADAPTER bzw. BASE_FOLDER abweichende Pfade angegeben worden sind, müssen diese in den on()-Aufrufen ebenfalls angepasst werden.
 
 # Todo's
 
