@@ -3,23 +3,27 @@ import asyncio
 import logging
 import requests
 
-IOBROKER_BASE_URL = "http://<<iobroker_ip_address>>:8087/setBulk"
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
+VERSION = "0.2.0"
+print(f"{sys.argv[0]} Version: {VERSION}")
+
 # Anzahl Argumente prüfen
-if len(sys.argv) != 5:
+if len(sys.argv) != 6:
     print("*** Wrong number of script arguments.")
-    print("*** call example: {sys.argv[0]} clientId spaId lightKey lightChannel")
+    print("*** call example: {sys.argv[0]} clientId spaId restApiUrl lightKey lightChannel")
     quit(-1)
 
 print("Total arguments passed:", len(sys.argv))
 CLIENT_ID = sys.argv[1]
 print(f"Connecting using client id {CLIENT_ID}")
-SPA_ID = sys.argv[2]
+IOBRURL = sys.argv[2]
+print(f"ioBroker Simple Rest API URL: {IOBRURL}")
+SPA_ID = sys.argv[3]
 print(f"Connecting to spa id {SPA_ID}")
-LIGHT_KEY = sys.argv[3]
+LIGHT_KEY = sys.argv[4]
 print(f"Switching light: {LIGHT_KEY}")
-IOBR_LIGHT_CHANNEL = sys.argv[4]
+IOBR_LIGHT_CHANNEL = sys.argv[5]
 print(f"Got channel for update: {IOBR_LIGHT_CHANNEL}")
 
 class SampleSpaMan(GeckoAsyncSpaMan):
@@ -82,12 +86,12 @@ async def main() -> None:
 
         # sending state updates to ioBroker
         sJson2Send = sJson2Send + "{}.Switch={}".format(IOBR_LIGHT_CHANNEL, str(newLightMode).lower()) + "&ack=true& "
-        sJson2Send = sJson2Send + "{}.Modus={}".format(IOBR_LIGHT_CHANNEL, str(newLightMode).lower()) + "&ack=true& "
+        sJson2Send = sJson2Send + "{}.Is_On={}".format(IOBR_LIGHT_CHANNEL, str(newLightMode).lower()) + "&ack=true& "
 
         sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
         #print(sJson2Send)
         try:
-            oResponse = requests.post(IOBROKER_BASE_URL, data = sJson2Send)
+            oResponse = requests.post("{}/setBulk".format(IOBRURL), data = sJson2Send)
         except Exception as e:
             print(e)
             print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url")
@@ -112,4 +116,3 @@ if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
     asyncio.run(main())
-
