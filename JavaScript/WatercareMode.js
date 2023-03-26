@@ -3,35 +3,37 @@ on({id: /^javascript\.\d+\.Datenpunkte\.SwimSpa\.\d+\.WasserpflegeSwitch$/, chan
     setWatercareMode(obj);
 });
 
-function setWatercareMode(obj) {
+async function setWatercareMode(obj) {
     var newWaterCareModeIdx = obj.state.val;
-    
+    console.log("start");
+    var dpBasePath = BASE_ADAPTER + "." + BASE_FOLDER
     // get client id
     var clientId = getState(getParent(obj.id, 2) + ".ClientGUID").val;
-    console.log("*** clientId: " + clientId);
+    //console.log("*** clientId: " + clientId);
     // get spa id
     var spaId = getState(getParent(obj.id, 1) + ".ID").val;
-    console.log("*** spaId: " + spaId);
+    //console.log("*** spaId: " + spaId);
     // neuer Wasserpflegemodus Index
-    console.log("*** new watercare mode index: " + newWaterCareModeIdx);
+    //console.log("*** new watercare mode index: " + newWaterCareModeIdx);
 
-    
-    // spa_toggleLight.py clientId spaId lightKey lightChannel
-    //console.log('python3 spa_setWatercareMode.py ' + clientId + " " + spaId + " " + newWaterCareModeIdx + " " + getParent(obj.id, 1));
-    exec('python3 spa_setWatercareMode.py ' + clientId + " " + spaId + " " + newWaterCareModeIdx + " " + getParent(obj.id, 1), function (error, stdout, stderr) {
-        console.log('*** stdout: ' + stdout);
-        if (error !== null) {
-            console.log('*** stderr: ' + error);
-            setState(obj.id, {val: obj.oldState.val, ack: true});
-            console.log("*** setting state of:" + obj.id + " to old value: " + obj.oldState.val);
+    // check if executable is running
+    let maxWait = 32,
+        startTime = Date.now();
+    while (await getState(dpBasePath + ".scriptRunning").val) {
+        await Sleep(500);
+        if (Date.now() - startTime >= maxWait * 1000) {
+            console.log("timeout waiting for an execution timeslot");
+            return
         }
-    });
-}
-
-function getParent(id, num) {
-    var idParent = id;
-    for (var min = 0; min < num; min++) {
-        idParent = idParent.substring(0, idParent.lastIndexOf("."));
     }
-    return idParent;
+    // signal that a script is running
+    setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
+
+    // spa_toggleLight.py clientId restApiUrl spaId lightKey lightChannel
+    console.log('*** executing: ' + SPA_EXECUTEABLE + ' spa_setWatercareMode.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + newWaterCareModeIdx + " " + getParent(obj.id, 1));
+    await execPythonAsync(SPA_EXECUTEABLE + ' spa_setWatercareMode.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + newWaterCareModeIdx + " " + getParent(obj.id, 1));
+
+    // signal that there is no longer a script is running
+    setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
+    console.log("end");
 }

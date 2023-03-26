@@ -90,11 +90,11 @@ Alle Python Skripte  aus dem Repository (Ordner: [Python](Python)) in einem Verz
 
 # Todo's
 
-* Momentan ist der Pfad zu den Datenpunkten in den Python Scripten noch fest codiert - umstellen auf Parameter nötig
-* Die URL vom ioBroker Rest API muss als Parameter mit übergeben werden
-* Alle Python Skripte sollen ohne Konstanten aufrufbar sein
-* Statt cron soll der regelmäßige Aufruf mit ioBroker Schedule möglich sein
-* Status der Erreichbarkeit des Spa in Datenpunkt darstellen (Ebene Netzwerk, Online/Offline), sowie Fehler bei letzten Kommando
-* Richtiges Discovery der Eigenschaften des Spa Controllers anstatt feste Anlage der Datenpunkte via Skript
-* Das setzen der Zieltemperatur ist empfindlich ggü. mehreren schnell auseinanderfolgenden Wertänderungen. Momentan am besten einen Slider nutzen, der eine Funktion "Update value on release" untersützt, so dass der DP nur einmal geändert wird. Das Script braucht immer ein paar Sekunden bis der Wert im Hintergrund gesetzt wurde.
-* ...
+* [X] Momentan ist der Pfad zu den Datenpunkten in den Python Scripten noch fest codiert - umstellen auf Parameter nötig
+* [X] Die URL vom ioBroker Rest API muss als Parameter mit übergeben werden
+* [X] Alle Python Skripte sollen ohne Konstanten aufrufbar sein
+* [X] Statt cron soll der regelmäßige Aufruf mit ioBroker Schedule möglich sein
+* [ ] Status der Erreichbarkeit des Spa in Datenpunkt darstellen (Ebene Netzwerk, Online/Offline), sowie Fehler bei letzten Kommando
+* [ ] Richtiges Discovery der Eigenschaften des Spa Controllers anstatt feste Anlage der Datenpunkte via Skript
+* [ ] Das setzen der Zieltemperatur ist empfindlich ggü. mehreren schnell auseinanderfolgenden Wertänderungen. Momentan am besten einen Slider nutzen, der eine Funktion "Update value on release" untersützt, so dass der DP nur einmal geändert wird. Das Script braucht immer ein paar Sekunden bis der Wert im Hintergrund gesetzt wurde.
+* [ ] ...

@@ -3,8 +3,6 @@ import asyncio
 import logging
 import requests
 
-IOBROKER_BASE_URL = "http://<<iobroker_ip_address>>:8087/setBulk"
-
 dictEn2De = {'Away From Home': 'Abwesend',
           'Standard': 'Standard', 
           'Energy Saving': 'Energiesparen',
@@ -14,12 +12,14 @@ dictEn2De = {'Away From Home': 'Abwesend',
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
+VERSION = "0.2.0"
+print(f"{sys.argv[0]} Version: {VERSION}")
+
 # Anzahl Argumente prüfen
-if len(sys.argv) != 5:
+if len(sys.argv) != 6:
     print("*** Wrong number of script arguments.")
     print("*** call example: {sys.argv[0]} clientId spaId targetTemp targetTempDatapoint")
     quit(-1)
-
 
 def is_integer(n):
     try:
@@ -32,9 +32,11 @@ def is_integer(n):
 print("Total arguments passed:", len(sys.argv))
 CLIENT_ID = sys.argv[1]
 print(f"Connecting using client id {CLIENT_ID}")
-SPA_ID = sys.argv[2]
+IOBRURL = sys.argv[2]
+print(f"ioBroker Simple Rest API URL: {IOBRURL}")
+SPA_ID = sys.argv[3]
 print(f"Connecting to spa id {SPA_ID}")
-NEW_WATERCAREMODE_IDX = sys.argv[3]
+NEW_WATERCAREMODE_IDX = sys.argv[4]
 if (not is_integer(NEW_WATERCAREMODE_IDX)):
     print(f"error: value {NEW_WATERCAREMODE_IDX} of argument 3 is not an int")
     quit(-1)
@@ -43,7 +45,7 @@ if (NEW_WATERCAREMODE_IDX < 0 and NEW_WATERCAREMODE_IDX > 4):
     print(f"error: value {NEW_WATERCAREMODE_IDX} is out of allowed range")
     quit(-1)
 print(f"New watercare mode index: {NEW_WATERCAREMODE_IDX}")
-IOBR_DEVICE_PATH = sys.argv[4]
+IOBR_DEVICE_PATH = sys.argv[5]
 print(f"Got device path to update: {IOBR_DEVICE_PATH}")
 
 class SampleSpaMan(GeckoAsyncSpaMan):
@@ -57,8 +59,6 @@ class SampleSpaMan(GeckoAsyncSpaMan):
 async def main() -> None:
 
     async with SampleSpaMan(CLIENT_ID, spa_identifier=SPA_ID) as spaman:
-        print("Looking for spas on your network ...")
-        
         print(f"*** connecting to spa")
         # Wait for descriptors to be available
         await spaman.wait_for_descriptors()
@@ -98,7 +98,7 @@ async def main() -> None:
         sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
         print(sJson2Send)
         try:
-            oResponse = requests.post(IOBROKER_BASE_URL, data = sJson2Send)
+            oResponse = requests.post("{}/setBulk".format(IOBRURL), data = sJson2Send)
         except Exception as e:
             print(e)
             print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url")

@@ -32,8 +32,7 @@ class SampleSpaMan(GeckoAsyncSpaMan):
 
 async def main() -> None:
     async with SampleSpaMan(CLIENT_ID, spa_address=None) as spaman:
-        print("*** looking for spas on your network ...")
-
+        print(f"*** connecting to spa")
         # Wait for descriptors to be available
         await spaman.wait_for_descriptors()
 

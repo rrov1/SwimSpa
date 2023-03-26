@@ -3,12 +3,13 @@ import asyncio
 import logging
 import requests
 
-IOBROKER_BASE_URL = "http://<<iobroker_ip_address>>:8087/setBulk"
-
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
+VERSION = "0.2.0"
+print(f"{sys.argv[0]} Version: {VERSION}")
+
 # Anzahl Argumente prüfen
-if len(sys.argv) != 6:
+if len(sys.argv) != 7:
     print("*** Wrong number of script arguments.\n")
     print("*** call example: {sys.argv[0]} clientId spaId pumpId newPumpState pumpChannel")
     quit(-1)
@@ -16,13 +17,15 @@ if len(sys.argv) != 6:
 print("Total arguments passed:", len(sys.argv))
 CLIENT_ID = sys.argv[1]
 print(f"Connecting using client id {CLIENT_ID}")
-SPA_ID = sys.argv[2]
+IOBRURL = sys.argv[2]
+print(f"ioBroker Simple Rest API URL: {IOBRURL}")
+SPA_ID = sys.argv[3]
 print(f"Connecting to spa id {SPA_ID}")
-PUMP_ID = int(sys.argv[3])
+PUMP_ID = int(sys.argv[4])
 print(f"Switching pump id {PUMP_ID}")
-NEW_PUMP_STATE = int(sys.argv[4])
+NEW_PUMP_STATE = int(sys.argv[5])
 print(f"Switching pump to state id {NEW_PUMP_STATE}")
-IOBR_PUMP_CHANNEL = sys.argv[5]
+IOBR_PUMP_CHANNEL = sys.argv[6]
 print(f"Got channel for update: {IOBR_PUMP_CHANNEL}")
 
 class SampleSpaMan(GeckoAsyncSpaMan):
@@ -99,7 +102,7 @@ async def main() -> None:
         sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
         #print(sJson2Send)
         try:
-            oResponse = requests.post(IOBROKER_BASE_URL, data = sJson2Send)
+            oResponse = requests.post("{}/setBulk".format(IOBRURL), data = sJson2Send)
         except Exception as e:
             print(e)
             print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url")

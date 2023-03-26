@@ -3,36 +3,40 @@ on({id: /^javascript\.\d+\.Datenpunkte\.SwimSpa\.\d+\.Pumpen\.P\d+\.Switch$/, ch
     switchPump(obj);
 });
 
-function switchPump(obj) {
+async function switchPump(obj) {
     var newState = obj.state.val;
-    
+    console.log("start");
+    var dpBasePath = BASE_ADAPTER + "." + BASE_FOLDER
     // get client id
     var clientId = getState(getParent(obj.id, 4) + ".ClientGUID").val;
-    console.log("*** clientId: " + clientId);
+    //console.log("*** clientId: " + clientId);
     // get spa id
     var spaId = getState(getParent(obj.id, 3) + ".ID").val;
-    console.log("*** spaId: " + spaId);
+    //console.log("*** spaId: " + spaId);
     // get pump id
     var pumpId = parseInt(obj.channelId.substring(obj.channelId.lastIndexOf(".") + 2));
     pumpId--;
-    console.log("*** pump id: " + pumpId);
-    console.log("*** new pump state: " + newState);
+    //console.log("*** pump id: " + pumpId);
+    //console.log("*** new pump state: " + newState);
     
-    // spa_switchPump.py clientId spaId pumpId newPumpState pumpChannel
-    exec('python3 spa_switchPump.py ' + clientId + " " + spaId + " " + pumpId + " " + newState + " " + obj.channelId, function (error, stdout, stderr) {
-        console.log('*** stdout: ' + stdout);
-        if (error !== null) {
-            console.log('*** stderr: ' + error);
-            setState(obj.id, {val: obj.oldState.val, ack: true});
-            console.log("*** setting state of:" + obj.id + " to old value: " + obj.oldState.val);
+    // check if executable is running
+    let maxWait = 32,
+        startTime = Date.now();
+    while (await getState(dpBasePath + ".scriptRunning").val) {
+        await Sleep(500);
+        if (Date.now() - startTime >= maxWait * 1000) {
+            console.log("timeout waiting for an execution timeslot");
+            return
         }
-    });
-}
-
-function getParent(id, num) {
-    var idParent = id;
-    for (var min = 0; min < num; min++) {
-        idParent = idParent.substring(0, idParent.lastIndexOf("."));
     }
-    return idParent;
+    // signal that a script is running
+    setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
+
+    // spa_switchPump.py clientId restApiUrl spaId pumpId newPumpState pumpChannel
+    console.log('*** executing: ' + SPA_EXECUTEABLE + ' spa_switchPump.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + pumpId + " " + newState + " " + obj.channelId);
+    await execPythonAsync(SPA_EXECUTEABLE + ' spa_switchPump.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + pumpId + " " + newState + " " + obj.channelId);
+
+    // signal that there is no longer a script is running
+    setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
+    console.log("end");
 }
