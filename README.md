@@ -81,8 +81,8 @@ Alle Python Skripte  aus dem Repository (Ordner: [Python](Python)) in einem Verz
 | **Zweck**                    | **Javascript**              | **Python Skript**           |
 | ---------------------------- | --------------------------- | --------------------------- |
 | Schalten der Pumpen          | PumpSwitches.js             | spa_switchPump.py ClientGUID SpaId PumpId PumpstateId PumpChannelPath |
-| Schalten der Beleuchtung     | LightToggle.js              | spa_toggleLight.py ClientGUID SpaId LightKey LightChannelPath |
-| Setzen der Zieltemperatur    | TargetTemp.js               | spa_setTargetTemp.py ClientGUID SpaId TargetTemp TargetTempDatapointPath |
+| Schalten der Beleuchtung     | LightToggle.js              | spa_toggleLight.py ClientGUID SpaId restApiUrl LightKey LightChannelPath |
+| Setzen der Zieltemperatur    | TargetTemp.js               | spa_setTargetTemp.py ClientGUID SpaId restApiUrl TargetTemp TargetTempDatapointPath |
 | Setzen des Wasserpflegemodus | WatercareMode.js            | spa_setWatercareMode.py ClientGUID SpaId waterCareModeIdx DevicePath |
 
 
