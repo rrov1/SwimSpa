@@ -1,3 +1,18 @@
+# Inhalt
+<!-- TOC -->
+
+- [Inhalt](#inhalt)
+- [Beispiel für eine Visualisierung](#beispiel-für-eine-visualisierung)
+- [Elemente zu Steuerung eines Spa Controllers](#elemente-zu-steuerung-eines-spa-controllers)
+  - [Temperaturen und sonstige Werte](#temperaturen-und-sonstige-werte)
+  - [Auswahl des Wasserpflegemodus](#auswahl-des-wasserpflegemodus)
+  - [Zieltemperatur](#zieltemperatur)
+  - [Schalten von Licht](#schalten-von-licht)
+  - [Pumpen- oder Filterstatus](#pumpen--oder-filterstatus)
+
+<!-- /TOC -->
+
+
 # Beispiel für eine Visualisierung
 
 ![Visualisierung auf 10 Zoll Display](img/tablet_visualization.png)
@@ -14,14 +29,14 @@ Basic Number Widget:<br>
 Konfiguration: <br>
 ![Basic Number Widget Attributes](img/basic-number_attributes.png)<br>
 
-## Combobox zur Auswahl des Wasserpflegemodus
+## Auswahl des Wasserpflegemodus
 jqui - Select ValueList:<br>
 ![jqui - Select ValueList](img/jqui-Select_ValueList.png)<br>
 
 Konfiguration: <br>
 ![jqui - Select ValueList Attributes](img/jqui-Select_ValueList_attributes.png)<br>
 
-## Slider für die Zieltemperatur
+## Zieltemperatur
 vis-inventwo - Simple Slider: <br>
 ![vis-inventwo - Simple Slider](img/vis-inventwo-Simple_Slider.png)<br>
 
@@ -29,7 +44,7 @@ Konfiguration: <br>
 **Wichtig:** Der Slider darf den Wert erst am Ende setzen (Option: "Update value on release" unbedingt aktivieren!)
 ![vis-inventwo - Simple Slider Attributes](img/vis-inventwo-Simple_Slider_attributes.png)
 
-## Button zum Schalten von Licht
+## Schalten von Licht
 vis-inventwo - Universal Switch: <br>
 ![vis-inventwo - Universal Switch](img/vis-inventwo-Universal_Switch.png)<br>
 Diese Button müsste sich auch für Pumpen eignen, die nur 2 Stufen (OFF & HIGH) haben, da man den Wert beinflussen kann.
