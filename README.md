@@ -88,6 +88,10 @@ Alle Python Skripte  aus dem Repository (Ordner: [Python](Python)) in einem Verz
 
 **Hinweis:** Wenn im vorhergehenden Schritt bei BASE_ADAPTER bzw. BASE_FOLDER abweichende Pfade angegeben worden sind, müssen diese in den on()-Aufrufen ebenfalls angepasst werden.
 
+## Visualisierung
+
+[Hier](doc\visualization.md) mal ein Beispiel für eine Visualisierung mit vis im ioBroker.
+
 # Todo's
 
 * [X] Momentan ist der Pfad zu den Datenpunkten in den Python Scripten noch fest codiert - umstellen auf Parameter nötig
@@ -97,4 +101,6 @@ Alle Python Skripte  aus dem Repository (Ordner: [Python](Python)) in einem Verz
 * [ ] Status der Erreichbarkeit des Spa in Datenpunkt darstellen (Ebene Netzwerk, Online/Offline), sowie Fehler bei letzten Kommando
 * [ ] Richtiges Discovery der Eigenschaften des Spa Controllers anstatt feste Anlage der Datenpunkte via Skript
 * [ ] Das setzen der Zieltemperatur ist empfindlich ggü. mehreren schnell auseinanderfolgenden Wertänderungen. Momentan am besten einen Slider nutzen, der eine Funktion "Update value on release" untersützt, so dass der DP nur einmal geändert wird. Das Script braucht immer ein paar Sekunden bis der Wert im Hintergrund gesetzt wurde.
+* [ ] Aktuell funktionieren die Erinnerungen nicht, da die geckolib keine Werte zurückgibt
+* [ ] Das Auslösen einer Aktion (Licht an/aus, Pumpe an/aus) braucht ca. 15 Sekunden bis es umgesetzt ist (liegt am Verbindungsaufbau der recht lange dauert bei der geckolib)
 * [ ] ...
