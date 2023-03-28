@@ -1,7 +1,10 @@
 # Beispiel für eine Visualisierung
 
 ![Visualisierung auf 10 Zoll Display](img/tablet_visualization.png)
-Visualisierung für ein 10 Zoll Display horizontal. Parktisch kann jedes beliebige Widget verwendet werden, es ist wichtig das die Datenpunkte selbst mit ack = false gesetzt werden (das ist eigentlich das Standardverhalten).
+Visualisierung für ein 10 Zoll Display horizontal. Parktisch kann jedes beliebige Widget verwendet werden. Es ist wichtig, dass die Datenpunkte selbst mit ack = false gesetzt werden (das ist eigentlich das Standardverhalten).
+
+Der Chart ist mit eChart erstellt, die Datenpunkte können z.B. mit dem "SQL logging" Adapter in einer mariaDB aufgezeichnet werden (geht aber praktisch auch alles andere was ioBroker unterstürzt).
+
 
 # Elemente zu Steuerung eines Spa Controllers
 ## Temperaturen und sonstige Werte
@@ -34,3 +37,11 @@ Diese Button müsste sich auch für Pumpen eignen, die nur 2 Stufen (OFF & HIGH)
 Konfiguration: <br>
 ![vis-inventwo - Universal Switch Attributes Part1](img/vis-inventwo-Universal_Switch_attributes_part1.png)
 ![vis-inventwo - Universal Switch Attributes Part2](img/vis-inventwo-Universal_Switch_attributes_part2.png)
+
+## Pumpen- oder Filterstatus
+vis-Inventwo - Image: <br>
+![vis-Inventwo - Image](img/vis-Inventwo-Image.png)<br>
+
+Konfiguration: <br>
+![vis-Inventwo - Image Attributes Part1](img/vis-Inventwo-Image_attributes_part1.png)
+![vis-Inventwo - Image Attributes Part2](img/vis-Inventwo-Image_attributes_part2.png)
