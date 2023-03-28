@@ -90,7 +90,7 @@ Alle Python Skripte  aus dem Repository (Ordner: [Python](Python)) in einem Verz
 
 ## Visualisierung
 
-[Hier](doc\visualization.md) mal ein Beispiel für eine Visualisierung mit vis im ioBroker.
+[Hier](doc/visualization.md) mal ein Beispiel für eine Visualisierung mit vis im ioBroker.
 
 # Todo's
 
