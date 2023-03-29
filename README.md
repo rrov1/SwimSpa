@@ -32,7 +32,7 @@
 ## Installation/Update
 Hier auf Github werden 2 Arten von Skripten bereitgestellt:
 1. Python-Skripte im Ordner: [Pyhton](Python), über die das geckolib API angesprochen wird
-2. Javascript-Skripte im Ordner: [Javascript](Javascript), welche im Javascript Adapter angelegt werden müssen
+2. Javascript-Skripte im Ordner: [Javascript](JavaScript), welche im Javascript Adapter angelegt werden müssen
 
 ### gazoodle/geckolib (github)
 Quelle: [https://github.com/gazoodle/geckolib](https://github.com/gazoodle/geckolib)
@@ -62,7 +62,7 @@ Alle Python Skripte aus dem Repository (Ordner: [Python](Python)) in einem Verze
 #### Schritt 1: Skript SpaGlobal.js bereitstellen
 
 * "Expert Mode" im Adapter aktivieren, damit der Ordner `global` angezeigt wird
-* im Ordner `global` ein neues Skript `SpaGlobal` anlegen und den Inhalt der Datei [SpaGlobal.js](Javascript/global/SpaGlobal.js) hineinkopieren und evtl. Konfiguration anpassen:
+* im Ordner `global` ein neues Skript `SpaGlobal` anlegen und den Inhalt der Datei [SpaGlobal.js](JavaScript/global/SpaGlobal.js) hineinkopieren und evtl. Konfiguration anpassen:
 
 | **Variable** | **Verwendungszweck/Wert** |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
@@ -73,7 +73,7 @@ Alle Python Skripte aus dem Repository (Ordner: [Python](Python)) in einem Verze
 
 #### Schritt 2: Erstellen bzw. Aktualisieren der Datenpunkte
 * Neuen Ordner `Spa` im Javascript Adapter anlegen um alle folgenden Skripte an einen Ort zu abzulegen
-* Neues Skript `SpaVariablen` in diesem Ordner anlegen und den Inahlt von [SpaVariablen.js](Javascript/SpaVariablen.js) einspielen
+* Neues Skript `SpaVariablen` in diesem Ordner anlegen und den Inahlt von [SpaVariablen.js](JavaScript/SpaVariablen.js) einspielen
 * den Aufruf der Funktion createDatapoints() anpassen:
 
 | **Parameter** | **Wert**                                       |
@@ -88,10 +88,10 @@ Alle Python Skripte aus dem Repository (Ordner: [Python](Python)) in einem Verze
 
 
 #### Schritt 3: Skripte für Spa Controller Konfiguration und Update der Zustände
-* Neues Skript: `SpaUpdateConfig` im Ordner `Spa` erstellen und den Inhalt von [SpaUpdateConfig.js](Javascript/SpaUpdateConfig.js) einfügen
+* Neues Skript: `SpaUpdateConfig` im Ordner `Spa` erstellen und den Inhalt von [SpaUpdateConfig.js](JavaScript/SpaUpdateConfig.js) einfügen
 * Die Javascript Funktion: `updateSpaConfig()` wird beim speichern 1x ausgeführt, danach aller 6h.
 * Jetzt prüfen ob die Datenpunkte die eher statische Konfigurationswerte darstellen, wie (z.B.: Temepratureinheit, ID, U_ID) aktualisiert worden sind.
-* Neues Skcript: `SpaUpdateValues` im Ordner `Spa` erstellen und den Inhalt von [SpaUpdateValues.js](Javascript/SpaUpdateValues.js) einfügen
+* Neues Skcript: `SpaUpdateValues` im Ordner `Spa` erstellen und den Inhalt von [SpaUpdateValues.js](JavaScript/SpaUpdateValues.js) einfügen
 * Das Skript wird minütlich aufgerufen und aktualisiert alle anderen Werte wie z.B. die Wassertemperaturen, Pumpenstatus, Licht usw.
 
 **Hinweis:** Wenn die Python Scripte in einem speziellen Ordner liegen, dann muss der Pfad ggf. im Javascript-Skript im exec()-Aufruf angepasst werden.
@@ -104,10 +104,10 @@ Alle Python Skripte aus dem Repository (Ordner: [Python](Python)) in einem Verze
 
 | **Zweck**                    | **Javascript**              | **Python Skript**           |
 | ---------------------------- | --------------------------- | --------------------------- |
-| Schalten der Pumpen          | `PumpSwitches` (Datei: [PumpSwitches.js](Javascript/PumpSwitches.js)) | `spa_switchPump.py clientId restApiUrl spaId pumpId newPumpState pumpChannel` |
-| Schalten der Beleuchtung     | `LightToggle` (Datei: [LightToggle.js](Javascript/LightToggle.js)) | `spa_toggleLight.py clientId restApiUrl spaId lightKey lightChannel` |
-| Setzen der Zieltemperatur    | `TargetTemp` (Datei: [TargetTemp.js](Javascript/TargetTemp.js)) | `spa_setTargetTemp.py clientId restApiUrl spaId targetTemp targetTempDatapoint` |
-| Setzen des Wasserpflegemodus | `WatercareMode` (Datei: [WatercareMode.js](Javascript/WatercareMode.js)) | `spa_setWatercareMode.py ClientGUID SpaId waterCareModeIdx devicePath` |
+| Schalten der Pumpen          | `PumpSwitches` (Datei: [PumpSwitches.js](JavaScript/PumpSwitches.js)) | `spa_switchPump.py clientId restApiUrl spaId pumpId newPumpState pumpChannel` |
+| Schalten der Beleuchtung     | `LightToggle` (Datei: [LightToggle.js](JavaScript/LightToggle.js)) | `spa_toggleLight.py clientId restApiUrl spaId lightKey lightChannel` |
+| Setzen der Zieltemperatur    | `TargetTemp` (Datei: [TargetTemp.js](JavaScript/TargetTemp.js)) | `spa_setTargetTemp.py clientId restApiUrl spaId targetTemp targetTempDatapoint` |
+| Setzen des Wasserpflegemodus | `WatercareMode` (Datei: [WatercareMode.js](JavaScript/WatercareMode.js)) | `spa_setWatercareMode.py ClientGUID SpaId waterCareModeIdx devicePath` |
 
 
 **Hinweis:** Wenn im vorhergehenden Schritt bei BASE_ADAPTER bzw. BASE_FOLDER abweichende Pfade angegeben worden sind, müssen diese in den on()-Aufrufen ebenfalls angepasst werden.
