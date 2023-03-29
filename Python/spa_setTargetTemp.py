@@ -11,7 +11,7 @@ print(f"{sys.argv[0]} Version: {VERSION}")
 # Anzahl Argumente prüfen
 if len(sys.argv) != 6:
     print("*** Wrong number of script arguments.")
-    print("*** call example: {sys.argv[0]} clientId spaId restApiUrl targetTemp targetTempDatapoint")
+    print("*** call example: {sys.argv[0]} clientId restApiUrl spaId targetTemp targetTempDatapoint")
     quit(-1)
 
 def is_float(element: any) -> bool:

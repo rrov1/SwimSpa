@@ -5,13 +5,13 @@ import requests
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
 if len(sys.argv) != 6:
     print("*** Wrong number of script arguments.")
-    print("*** call example: {sys.argv[0]} clientId spaId restApiUrl lightKey lightChannel")
+    print("*** call example: {sys.argv[0]} clientId restApiUrl spaId lightKey lightChannel")
     quit(-1)
 
 print("Total arguments passed:", len(sys.argv))
