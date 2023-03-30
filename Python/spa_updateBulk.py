@@ -3,16 +3,17 @@ import asyncio
 import requests
 import urllib.parse
 import logging
+import signal
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
 if len(sys.argv) != 5:
     print("*** Wrong number of script arguments.\n")
-    print(f"*** call example: {sys.argv[0]} clientId ioBrSimpleRestApiUrl dpBasePath ")
+    print(f"*** call example: {sys.argv[0]} clientId ioBrSimpleRestApiUrl spaIds dpBasePath")
     quit(-1)
 
 print("total arguments passed:", len(sys.argv))
@@ -37,6 +38,13 @@ dictEn2De = {'Away From Home': 'Abwesend',
           'Weekender': 'Wochenende'
 }
 
+def set_run_timeout(timeout):
+    """Set maximum execution time of the current Python process"""
+    def alarm(*_):
+        raise SystemExit("Timed out!")
+    signal.signal(signal.SIGALRM, alarm)
+    signal.alarm(timeout)
+
 def cutModeName(modeString):
     # correct mode string in case geckolib returns longer strings than in modes collection
     if modeString == "OFF":
@@ -57,6 +65,7 @@ class SampleSpaMan(GeckoAsyncSpaMan):
 
 async def main() -> None:
     sJson2Send = ""
+    set_run_timeout(90)
 
     for nSpaNum in range(len(SPA_ID)):
         spa = SPA_ID[nSpaNum]
