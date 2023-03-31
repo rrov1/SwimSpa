@@ -14,6 +14,12 @@ async function updateSpaConfig() {
     var clientId = await getState(dpBasePath + ".ClientGUID").val;
     //console.log("*** clientId: " + clientId);
     
+    // reset if script runs longer than 5 minutes
+    var diff = new Date(new Date() - new Date(getState(dpBasePath + ".scriptRunning").ts));
+    if (Math.floor((diff/1000)/60) > 5) {
+        console.log("resetting scriptRunning, because it's false since more than 5 minutes");
+        setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
+    }
     // check if executable is running
     let maxWait = 35,
         startTime = Date.now();

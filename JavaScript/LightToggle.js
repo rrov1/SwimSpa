@@ -18,6 +18,12 @@ async function toggleLight(obj) {
     var lightKey = obj.channelId.substring(obj.channelId.lastIndexOf(".") + 1);
     //console.log("*** light key: " + lightKey);
     
+    // reset if script runs longer than 5 minutes
+    var diff = new Date(new Date() - new Date(getState(dpBasePath + ".scriptRunning").ts));
+    if (Math.floor((diff/1000)/60) > 5) {
+        console.log("resetting scriptRunning, because it's false since more than 5 minutes");
+        setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
+    }
     // check if executable is running
     let maxWait = 32,
         startTime = Date.now();
