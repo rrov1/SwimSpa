@@ -757,16 +757,11 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             "common" : {"name": "Erinnerungen"}
         });
 
-        // Reminder: string
-        createState(BASE_FOLDER + "." + nCurDev + ".Erinnerungen.Time", "_", {
-            read: true, 
-            write: false, 
-            name: "Time", 
-            type: "string", 
-            role: "info",
-            desc: "Auslesezeitpunkt Erinnerung", 
-            def: ""
-        });
+        // Reminder: string - löschen wir nicht mehr benötigt
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Erinnerungen.Time";
+        if (existsObject(objectId)) {
+            deleteState(objectId);
+        }
         // Reminder: number
         var sReminders = ["RinseFilter", "CleanFilter", "ChangeWater", "CheckSpa"];
         var sReminderDesc = ["Filter spülen", "Filter reinigen", "Wasser wechseln", "Spa prüfen"];

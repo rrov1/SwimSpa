@@ -5,7 +5,7 @@ import requests
 import urllib
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -32,7 +32,8 @@ class SampleSpaMan(GeckoAsyncSpaMan):
 
 async def main() -> None:
     async with SampleSpaMan(CLIENT_ID, spa_address=None) as spaman:
-        print(f"*** connecting to spa")
+        print("*** looking for spas on your network ...")
+
         # Wait for descriptors to be available
         await spaman.wait_for_descriptors()
 
@@ -132,9 +133,12 @@ async def main() -> None:
             
             rm = spaman.facade.reminders_manager
             print(f"anzahl reminders: {len(rm.reminders)}")
+            // fixe Wartezeit, ansonsten sind keine Werte verfügbar
+            await asyncio.sleep(4)
+            print(f"anzahl reminders: {len(rm.reminders)}")
             for reminder in rm.reminders:
-                print(f"reminder: {reminder}")
-                sJson2Send = sJson2Send + "{}.{}.Erinnerungen.{}={}".format(IOB_DP_BASE_PATH, nSpaNum, reminder[0], urllib.parse.quote(str(reminder[1]))) + "&ack=true& "
+                #print(f"reminder: {reminder.description} - {str(reminder.days)}")
+                sJson2Send = sJson2Send + "{}.{}.Erinnerungen.{}={}".format(IOB_DP_BASE_PATH, nSpaNum, reminder.description, urllib.parse.quote(str(reminder.days))) + "&ack=true& "
 
             print(f"error sensor state {spaman.facade.error_sensor.state}")
 

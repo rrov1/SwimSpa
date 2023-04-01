@@ -27,6 +27,7 @@
 * [X] Schalten der Beleuchtung
 * [X] Einstellen der Zieltemperatur
 * [X] Einstellen des Wasserpflegemodus
+* [X] Erinnerungen
 * [ ] ToDos unten umsetzen
 
 ## Installation/Update
@@ -125,7 +126,7 @@ Alle Python Skripte aus dem Repository (Ordner: [Python](Python)) in einem Verze
 * [ ] Status der Erreichbarkeit des Spa in Datenpunkt darstellen (Ebene Netzwerk, Online/Offline), sowie Fehler bei letzten Kommando
 * [ ] Richtiges Discovery der Eigenschaften des Spa Controllers anstatt feste Anlage der Datenpunkte via Skript
 * [ ] Das setzen der Zieltemperatur ist empfindlich ggü. mehreren schnell auseinanderfolgenden Wertänderungen. Momentan am besten einen Slider nutzen, der eine Funktion "Update value on release" untersützt, so dass der DP nur einmal geändert wird. Das Script braucht immer ein paar Sekunden bis der Wert im Hintergrund gesetzt wurde.
-* [ ] Aktuell funktionieren die Erinnerungen nicht, da die geckolib keine Werte zurückgibt
+* [X] Aktuell funktionieren die Erinnerungen nicht, da die geckolib keine Werte zurückgibt
 * [ ] Das Auslösen einer Aktion (Licht an/aus, Pumpe an/aus) braucht ca. 15 Sekunden bis es umgesetzt ist (liegt am Verbindungsaufbau der recht lange dauert bei der geckolib)
 * [ ] Pfad zu den Python Skripten global konfigurierbar machen und die Anleitung dahingehend anpassen (auch Skriptbereitstellung)
 * [ ] ...
