@@ -75,7 +75,7 @@ drwxr-xr-x 23 root     root     4096 Apr  2 11:37 ..
 ```
 Die Python-Skripte werden von den Javascript-Skripten aus aufgerufen mit den nötigen Parametern.<br>
 
-**Wichtig:** ioBroker benötigt Zugriff auf die Python-Skripte, der Ablageort kann z.B. `/opt/iobroker/node_modules/iobroker.javascript` sein, dann geht der Aufruf ohne Anpassung des Pfades, bei anderen Pfaden, dran denken die Rechte korrekt einzustellen und dann muss in den Javascripten der voll qualifizierte Pfad zu den Python-Skripten eingetragen werden!
+**Wichtig:** ioBroker benötigt Zugriff auf die Python-Skripte, der Ablageort kann z.B. auch `/opt/iobroker/node_modules/iobroker.javascript` sein, das könnte allerdings mal Probleme mit Adapter oder ioBroker Updates geben.
 
 
 ### Javascript Skripte für ioBroker
