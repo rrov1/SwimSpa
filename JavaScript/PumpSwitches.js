@@ -18,6 +18,11 @@ async function switchPump(obj) {
     pumpId--;
     //console.log("*** pump id: " + pumpId);
     //console.log("*** new pump state: " + newState);
+    var pyScriptFolder = PY_SCRIPTS_FOLDER;
+    if (!pyScriptFolder.endsWith("/")) {
+        pyScriptFolder += "/";
+    }
+    //console.log("*** pyScriptFolder: " + pyScriptFolder);
     
     // reset if script runs longer than 5 minutes
     var diff = new Date(new Date() - new Date(getState(dpBasePath + ".scriptRunning").ts));
@@ -39,8 +44,8 @@ async function switchPump(obj) {
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
     // spa_switchPump.py clientId restApiUrl spaId pumpId newPumpState pumpChannel
-    console.log('*** executing: ' + SPA_EXECUTEABLE + ' spa_switchPump.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + pumpId + " " + newState + " " + obj.channelId);
-    await execPythonAsync(SPA_EXECUTEABLE + ' spa_switchPump.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + pumpId + " " + newState + " " + obj.channelId);
+    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_switchPump.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + pumpId + " " + newState + " " + obj.channelId);
+    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_switchPump.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + pumpId + " " + newState + " " + obj.channelId);
 
     // signal that there is no longer a script is running
     setState(dpBasePath + '.scriptRunning', {val: false, ack: true});

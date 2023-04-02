@@ -20,6 +20,11 @@ async function updateSpaValues() {
         spaIdList = spaIdList.substring(0, spaIdList.length - 1);
     }
     //console.log("*** spaIdList: " + spaIdList);
+    var pyScriptFolder = PY_SCRIPTS_FOLDER;
+    if (!pyScriptFolder.endsWith("/")) {
+        pyScriptFolder += "/";
+    }
+    //console.log("*** pyScriptFolder: " + pyScriptFolder);
 
     // reset if script runs longer than 5 minutes
     var diff = new Date(new Date() - new Date(getState(dpBasePath + ".scriptRunning").ts));
@@ -41,8 +46,8 @@ async function updateSpaValues() {
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
     // spa_updateBulk.py clientId restApiUrl spaIdList dpBasePath
-    console.log('*** executing: ' + SPA_EXECUTEABLE + ' spa_updateBulk.py ' + clientId + " " + getRestApiUrl() + " " + spaIdList + " " + dpBasePath);
-    await execPythonAsync(SPA_EXECUTEABLE + ' spa_updateBulk.py ' + clientId + " " + getRestApiUrl() + " " + spaIdList + " " + dpBasePath);
+    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_updateBulk.py ' + clientId + " " + getRestApiUrl() + " " + spaIdList + " " + dpBasePath);
+    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_updateBulk.py ' + clientId + " " + getRestApiUrl() + " " + spaIdList + " " + dpBasePath);
 
     // signal that there is no longer a script is running
     setState(dpBasePath + '.scriptRunning', {val: false, ack: true});

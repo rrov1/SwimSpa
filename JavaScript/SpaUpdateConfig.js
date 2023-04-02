@@ -13,6 +13,11 @@ async function updateSpaConfig() {
     // get client id
     var clientId = await getState(dpBasePath + ".ClientGUID").val;
     //console.log("*** clientId: " + clientId);
+    var pyScriptFolder = PY_SCRIPTS_FOLDER;
+    if (!pyScriptFolder.endsWith("/")) {
+        pyScriptFolder += "/";
+    }
+    //console.log("*** pyScriptFolder: " + pyScriptFolder);
     
     // reset if script runs longer than 5 minutes
     var diff = new Date(new Date() - new Date(getState(dpBasePath + ".scriptRunning").ts));
@@ -34,8 +39,8 @@ async function updateSpaConfig() {
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
     // spa_config.py clientId restApiUrl dpBasePath
-    console.log('*** executing: ' + SPA_EXECUTEABLE + ' spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath);
-    await execPythonAsync(SPA_EXECUTEABLE + ' spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath);
+    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath);
+    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath);
 
     // signal that there is no longer a script is running
     setState(dpBasePath + '.scriptRunning', {val: false, ack: true});

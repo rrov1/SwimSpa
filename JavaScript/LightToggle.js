@@ -17,6 +17,11 @@ async function toggleLight(obj) {
     // get light key
     var lightKey = obj.channelId.substring(obj.channelId.lastIndexOf(".") + 1);
     //console.log("*** light key: " + lightKey);
+    var pyScriptFolder = PY_SCRIPTS_FOLDER;
+    if (!pyScriptFolder.endsWith("/")) {
+        pyScriptFolder += "/";
+    }
+    //console.log("*** pyScriptFolder: " + pyScriptFolder);
     
     // reset if script runs longer than 5 minutes
     var diff = new Date(new Date() - new Date(getState(dpBasePath + ".scriptRunning").ts));
@@ -38,8 +43,8 @@ async function toggleLight(obj) {
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
     // spa_toggleLight.py clientId spaId lightKey lightChannel
-    console.log('*** executing: ' + SPA_EXECUTEABLE + ' spa_toggleLight.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + lightKey + " " + obj.channelId);
-    await execPythonAsync(SPA_EXECUTEABLE + ' spa_toggleLight.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + lightKey + " " + obj.channelId);
+    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_toggleLight.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + lightKey + " " + obj.channelId);
+    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_toggleLight.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + lightKey + " " + obj.channelId);
 
     // signal that there is no longer a script is running
     setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
