@@ -2,6 +2,7 @@
 const BASE_ADAPTER = "javascript.0";
 const BASE_FOLDER = "Datenpunkte.SwimSpa";
 const SPA_EXECUTEABLE = "python3"
+const PY_SCRIPTS_FOLDER = "/SpaController"
 
 function execPythonAsync(command) {
     return new Promise((resolve, reject) => {
