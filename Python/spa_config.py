@@ -5,7 +5,7 @@ import requests
 import urllib
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -133,7 +133,7 @@ async def main() -> None:
             
             rm = spaman.facade.reminders_manager
             print(f"anzahl reminders: {len(rm.reminders)}")
-            // fixe Wartezeit, ansonsten sind keine Werte verfügbar
+            # fixe Wartezeit, ansonsten sind keine Werte verfügbar
             await asyncio.sleep(4)
             print(f"anzahl reminders: {len(rm.reminders)}")
             for reminder in rm.reminders:
