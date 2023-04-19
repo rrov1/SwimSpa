@@ -5,7 +5,8 @@ createDatapoints(2, 3, true);
 
 
 function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
-    console.log("*** start: createDatapoints(nDevCnt: " + nDevCnt + ", nPumpCnt: " + nPumpCnt + ", createWaterfall: " + createWaterfall + ")");
+    const VERSION = "0.2.0"
+    console.log("*** start: createDatapoints(nDevCnt: " + nDevCnt + ", nPumpCnt: " + nPumpCnt + ", createWaterfall: " + createWaterfall + ") v" + VERSION);
     var objectId, objectData;
 
     // globale Datenpunkte
@@ -345,23 +346,32 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             });
         }
 
-        createState(BASE_FOLDER + "." + nCurDev + ".WasserpflegeSwitch", {
-            read: true, 
-            write: true, 
-            name: "Wasserpflegemodusschalter",
-            type: 'string',
-            role: 'indicator',
-            states: {
-                0: "Abwesend",
-                1: "Standard",
-                2: "Energiesparen",
-                3: "Energiesparen Plus",
-                4: "Wochenende"
-            },
-            desc: "Auswahl des aktiven Wasserpflegemodus",
-            def: 0
-        });
-
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".WasserpflegeSwitch";
+        if (!existsState(objectId)) {
+            createState(objectId, {
+                read: true, 
+                write: true, 
+                name: "Wasserpflegemodusschalter",
+                type: 'number',
+                role: 'indicator',
+                states: {
+                    0: "Abwesend",
+                    1: "Standard",
+                    2: "Energiesparen",
+                    3: "Energiesparen Plus",
+                    4: "Wochenende"
+                },
+                desc: "Auswahl des aktiven Wasserpflegemodus",
+                def: 0
+            });
+        } else {
+            // Korrektur type Attribut
+            objectData = getObject(objectId);
+            objectData.common.type = "number";
+            setObject(objectId, objectData, function (err) {
+                if (err) log('cannot write object: ' + err);
+            });
+        }
         
         // Pumpen
         setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Pumpen", {
