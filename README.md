@@ -38,7 +38,7 @@ Hier auf Github werden 2 Arten von Skripten bereitgestellt:
 ### gazoodle/geckolib (github)
 Quelle: [https://github.com/gazoodle/geckolib](https://github.com/gazoodle/geckolib)
 
-Voraussetzung zur Installation: **Python3** & **Pip** (am besten unter einem Linux)
+Voraussetzung zur Installation: **Python3 mind. v3.8** & **Pip** (am besten unter einem Linux, nur Versionen die unter [Support](https://devguide.python.org/versions/) sind)
 
 Installation: `sudo pip install geckolib`<br>
 Update: `sudo pip install geckolib --upgrade`<br>
