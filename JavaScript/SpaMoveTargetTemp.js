@@ -2,8 +2,7 @@
 // kann ggf. auch den DP automaticTargetTemp auch deaktiviert werden
 
 schedule("10,40 * * * *", function () {
-    checkAndSetSpaTemp(BASE_ADAPTER + "." + BASE_FOLDER + ".0", 28);
-    checkAndSetSpaTemp(BASE_ADAPTER + "." + BASE_FOLDER + ".1", 37);
+    checkAndSetSpaTemp(BASE_ADAPTER + "." + BASE_FOLDER + ".0", 37);
 });
 
 function checkAndSetSpaTemp(spaDevice, maxTargetTemp) {

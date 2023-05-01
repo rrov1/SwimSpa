@@ -11,6 +11,8 @@
       - [Schritt 2: Erstellen bzw. Aktualisieren der Datenpunkte](#schritt-2-erstellen-bzw-aktualisieren-der-datenpunkte)
       - [Schritt 3: Skripte für Spa Controller Konfiguration und Update der Zustände](#schritt-3-skripte-für-spa-controller-konfiguration-und-update-der-zustände)
       - [Schritt 4: Weitere Skripte nach Bedarf](#schritt-4-weitere-skripte-nach-bedarf)
+  - [Fehlerbehandlung](#fehlerbehandlung)
+    - [SpaUpdateValues.js/spa\_updateBulk.py](#spaupdatevaluesjsspa_updatebulkpy)
   - [Visualisierung](#visualisierung)
 - [Todo's](#todos)
 
@@ -142,9 +144,14 @@ Werte die sich häufig ändern werden minütlich von `SpaUpdateValues` aktualisi
 | Schalten der Beleuchtung     | `LightToggle` (Datei: [LightToggle.js](JavaScript/LightToggle.js)) | `spa_toggleLight.py clientId restApiUrl spaId lightKey lightChannel` |
 | Setzen der Zieltemperatur    | `TargetTemp` (Datei: [TargetTemp.js](JavaScript/TargetTemp.js)) | `spa_setTargetTemp.py clientId restApiUrl spaId targetTemp targetTempDatapoint` |
 | Setzen des Wasserpflegemodus | `WatercareMode` (Datei: [WatercareMode.js](JavaScript/WatercareMode.js)) | `spa_setWatercareMode.py ClientGUID SpaId waterCareModeIdx devicePath` |
+| Automaische Nachführung der Zieltemperatur | `SpaMoveTargetTemp` [SpaMoveTargetTemp.js](JavaScript/SpaMoveTargetTemp.js)) | nicht benötigt |
 
 
 **Hinweis:** Wenn im vorhergehenden Schritt bei BASE_ADAPTER bzw. BASE_FOLDER abweichende Pfade angegeben worden sind, müssen diese in den on()-Aufrufen ebenfalls angepasst werden.
+
+## Fehlerbehandlung
+### SpaUpdateValues.js/spa_updateBulk.py
+Diese Skripte werden jede Minute gestartet (Zeile 4 in `SpaUpdateValues.js`) um Änderungen von Werten wie z.B. der Wassertemperatur, Pumpenstatus usw. vom SpaController auszulesen. Von den 1.440 Aufrufen pro Tag schlagen bei mir lt. Protokoll: ~50 Aufrufe fehl. Eine Quote so in der Höhe, vielleicht bis zu 200 je Tag, kann als normal betrachtet werden. Das hängt u.a. damit zusammen wie die geckolib mit dem SpaController kommuniziert, dann natürlich das minütliche pollen, vielleicht noch die App die parallel was tut, leider jenseits von perfekt von der Implementierung her :-(.
 
 ## Visualisierung
 
