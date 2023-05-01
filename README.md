@@ -144,7 +144,7 @@ Werte die sich häufig ändern werden minütlich von `SpaUpdateValues` aktualisi
 | Schalten der Beleuchtung     | `LightToggle` (Datei: [LightToggle.js](JavaScript/LightToggle.js)) | `spa_toggleLight.py clientId restApiUrl spaId lightKey lightChannel` |
 | Setzen der Zieltemperatur    | `TargetTemp` (Datei: [TargetTemp.js](JavaScript/TargetTemp.js)) | `spa_setTargetTemp.py clientId restApiUrl spaId targetTemp targetTempDatapoint` |
 | Setzen des Wasserpflegemodus | `WatercareMode` (Datei: [WatercareMode.js](JavaScript/WatercareMode.js)) | `spa_setWatercareMode.py ClientGUID SpaId waterCareModeIdx devicePath` |
-| Automaische Nachführung der Zieltemperatur | `SpaMoveTargetTemp` [SpaMoveTargetTemp.js](JavaScript/SpaMoveTargetTemp.js)) | nicht benötigt |
+| Automaische Nachführung der Zieltemperatur | `SpaMoveTargetTemp` (Datei: [SpaMoveTargetTemp.js](JavaScript/SpaMoveTargetTemp.js)) | nicht benötigt |
 
 
 **Hinweis:** Wenn im vorhergehenden Schritt bei BASE_ADAPTER bzw. BASE_FOLDER abweichende Pfade angegeben worden sind, müssen diese in den on()-Aufrufen ebenfalls angepasst werden.
