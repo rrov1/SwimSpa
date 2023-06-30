@@ -1,4 +1,4 @@
-// Zieltemperatur setzen (regulärer Ausdruck um alle Zieltemperaturen im System zu steuern mit einer subscription)
+// Zieltemperatur setzen (regulärer Ausdruck um Zieltemperatur aller Controller im System zu steuern mit einer subscription)
 on({id: /^javascript\.\d+\.Datenpunkte\.SwimSpa\.\d+\.ZielTemperatur$/, change: "ne", ack: false}, function (obj) {
     setTargetTemp(obj);
 });
@@ -6,7 +6,7 @@ on({id: /^javascript\.\d+\.Datenpunkte\.SwimSpa\.\d+\.ZielTemperatur$/, change: 
 async function setTargetTemp(obj) {
     var newState = obj.state.val;
     console.log("start");
-    var dpBasePath = BASE_ADAPTER + "." + BASE_FOLDER
+    var dpBasePath = BASE_ADAPTER + "." + BASE_FOLDER;
     // get client id
     var clientId = getState(getParent(obj.id, 2) + ".ClientGUID").val;
     //console.log("*** clientId: " + clientId);
