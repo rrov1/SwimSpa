@@ -7,7 +7,7 @@ import signal
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -41,7 +41,7 @@ dictEn2De = {'Away From Home': 'Abwesend',
 def set_run_timeout(timeout):
     """Set maximum execution time of the current Python process"""
     def alarm(*_):
-        raise SystemExit("Timed out!")
+        raise SystemExit("Timed out: Maximum script runtime reached.")
     signal.signal(signal.SIGALRM, alarm)
     signal.alarm(timeout)
 
@@ -71,74 +71,102 @@ async def main() -> None:
         spa = SPA_ID[nSpaNum]
         async with SampleSpaMan(CLIENT_ID, spa_identifier=spa) as spaman:
             print(f"*** {nSpaNum}: connecting to {spa}")
-            # Wait for descriptors to be available
-            await spaman.wait_for_descriptors()
-
-            if len(spaman.spa_descriptors) == 0:
-                print("*** there were no spas found on your network.")
-                quit(-1)
-
+            
+            # connect
             await spaman.async_connect(spa_identifier=spa)
 
             # Wait for the facade to be ready
-            await spaman.wait_for_facade()
-            print("*** connected")
+            result = await spaman.wait_for_facade()
+            
+            print(f"*** connect result-> {result}")
+            if result == True:
+                facade = spaman.facade
+                print("sending heater ops")
+                print(f'heater present-> {facade.water_heater.is_present}')
+                print(f"current heater operation-> {facade.water_heater.current_operation}")
+                sJson2Send = sJson2Send + "{}.{}.Heizer={}".format(IOB_DP_BASE_PATH, nSpaNum, facade.water_heater.current_operation) + "&ack=true& "
+                
+                # Temperaturen
+                print('sending temp')
+                # temp value must be within min/max temp +/-10 degrees
+                if float(facade.water_heater.current_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.current_temperature) < (float(facade.water_heater.max_temp) + 10):
+                    print(f"current temp-> {round(facade.water_heater.current_temperature, 2)}")
+                    sJson2Send = sJson2Send + "{}.{}.AktuelleTemperatur={}".format(IOB_DP_BASE_PATH, nSpaNum, round(facade.water_heater.current_temperature, 2)) + "&ack=true& "
+                if float(facade.water_heater.target_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.target_temperature) < (float(facade.water_heater.max_temp) + 10):
+                    print(f"target temp-> {round(facade.water_heater.target_temperature, 2)}")
+                    sJson2Send = sJson2Send + "{}.{}.ZielTemperatur={}".format(IOB_DP_BASE_PATH, nSpaNum, round(facade.water_heater.target_temperature, 2)) + "&ack=true& "
+                if float(facade.water_heater.real_target_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.real_target_temperature) < (float(facade.water_heater.max_temp) + 10):
+                    print(f"real target temp-> {round(facade.water_heater.real_target_temperature, 2)}")
+                    sJson2Send = sJson2Send + "{}.{}.EchteZielTemperatur={}".format(IOB_DP_BASE_PATH, nSpaNum, round(facade.water_heater.real_target_temperature, 2)) + "&ack=true& "
+                
+                # Wasserprflege
+                print('sending water care')
+                myMode = await facade.spa.async_get_watercare()
+                print(f"current watercare mode: {myMode}")
+                sJson2Send = sJson2Send + "{}.{}.WasserpflegeIndex={}".format(IOB_DP_BASE_PATH, nSpaNum, myMode) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.{}.WasserpflegeSwitch={}".format(IOB_DP_BASE_PATH, nSpaNum, myMode) + "&ack=true& "
+                
+                # Pumpen
+                print('sending pumps')
+                for pump in facade.pumps:
+                    print(f"{pump.name}-> {pump.mode}, {pump.modes}")
+                    sJson2Send = sJson2Send + "{}.{}.Pumpen.{}.Modus={}".format(IOB_DP_BASE_PATH, nSpaNum, pump.key, pump.mode) + "&ack=true& "
+                    # new pump state name
+                    SET_PUMP_STATE_NAME = cutModeName(pump.mode)
+                    # new pump state id
+                    for x in range(len(pump.modes)):
+                        if SET_PUMP_STATE_NAME == pump.modes[x]:
+                            SET_PUMP_STATE = x
+                            break
+                    sJson2Send = sJson2Send + "{}.{}.Pumpen.{}.Switch={}".format(IOB_DP_BASE_PATH, nSpaNum, pump.key, SET_PUMP_STATE) + "&ack=true& "
+                
+                # Lichter
+                print('sending lights')
+                for light in facade.lights:
+                    print(f"{light.name}-> {str(light.is_on).lower()}")
+                    sJson2Send = sJson2Send + "{}.{}.Lichter.{}.Is_On={}".format(IOB_DP_BASE_PATH, nSpaNum, light.key, str(light.is_on).lower()) + "&ack=true& "
+                    sJson2Send = sJson2Send + "{}.{}.Lichter.{}.Switch={}".format(IOB_DP_BASE_PATH, nSpaNum, light.key, str(light.is_on).lower()) + "&ack=true& "
+                
+                # Sensoren
+                print('sending sensors')
+                for binary_sensor in facade.binary_sensors:
+                    print(f"{binary_sensor.name}-> {binary_sensor.state}")
+                    sKey = binary_sensor.key
+                    sKey = sKey.replace(" ", "_")
+                    sKey = sKey.replace(":", "_")
+                    sJson2Send = sJson2Send + "{}.{}.Sensoren.{}.State={}".format(IOB_DP_BASE_PATH, nSpaNum, sKey, urllib.parse.quote((str(binary_sensor.state)).lower())) + "&ack=true& "
+                
+                # spaman sensoren
+                print('sending other sensors')
+                print(f"status_sensor-> {spaman.status_sensor.state}")
+                print(f"radio_sensor-> {spaman.radio_sensor.state}")
+                print(f"channel_sensor-> {spaman.channel_sensor.state}")
+                print(f"ping_sensor-> {spaman.ping_sensor.state}")
+                
+                # some sensors
+                sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Signal.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.radio_sensor.state))) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Channel.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.channel_sensor.state))) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.{}.Sensoren.Last_Ping.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.ping_sensor.state))) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.status_sensor.state)) + "&ack=true& "
+                print("finished reading all data")
 
-            facade = spaman.facade
-            
-            # Temperaturen
-            print(f'sending temp and heater ops')
-            print(f'Heizung vorhanden {facade.water_heater.is_present}')
-            # temp value must be within min/max temp +/-10 degrees
-            if float(facade.water_heater.current_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.current_temperature) < (float(facade.water_heater.max_temp) + 10):
-                sJson2Send = sJson2Send + "{}.{}.AktuelleTemperatur={}".format(IOB_DP_BASE_PATH, nSpaNum, round(facade.water_heater.current_temperature, 2)) + "&ack=true& "
-            if float(facade.water_heater.target_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.target_temperature) < (float(facade.water_heater.max_temp) + 10):
-                sJson2Send = sJson2Send + "{}.{}.ZielTemperatur={}".format(IOB_DP_BASE_PATH, nSpaNum, round(facade.water_heater.target_temperature, 2)) + "&ack=true& "
-            if float(facade.water_heater.real_target_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.real_target_temperature) < (float(facade.water_heater.max_temp) + 10):
-                sJson2Send = sJson2Send + "{}.{}.EchteZielTemperatur={}".format(IOB_DP_BASE_PATH, nSpaNum, round(facade.water_heater.real_target_temperature, 2)) + "&ack=true& "
-            sJson2Send = sJson2Send + "{}.{}.Heizer={}".format(IOB_DP_BASE_PATH, nSpaNum, facade.water_heater.current_operation) + "&ack=true& "
+                # kurz warten (löst das Problem mit den längeren Wartezeiten)
+                await asyncio.sleep(1)
 
-            # Wasserprflege
-            print('sending water care')
-            try:
-                for index, item in enumerate(facade.water_care.modes):
-                    facade.water_care.modes[index] = dictEn2De[item]
-            except:
-                print(".")
-            if facade.water_care.mode != None:
-                sJson2Send = sJson2Send + "{}.{}.Wasserpflege={}".format(IOB_DP_BASE_PATH, nSpaNum, facade.water_care.modes[facade.water_care.mode]) + "&ack=true& "
-                sJson2Send = sJson2Send + "{}.{}.WasserpflegeIndex={}".format(IOB_DP_BASE_PATH, nSpaNum, facade.water_care.mode) + "&ack=true& "
-                sJson2Send = sJson2Send + "{}.{}.WasserpflegeSwitch={}".format(IOB_DP_BASE_PATH, nSpaNum, facade.water_care.mode) + "&ack=true& "
-            
-            # Pumpen
-            print('sending pumps')
-            for pump in facade.pumps:
-                print(f"{pump.name}: {pump.mode}, {pump.modes}")
-                sJson2Send = sJson2Send + "{}.{}.Pumpen.{}.Modus={}".format(IOB_DP_BASE_PATH, nSpaNum, pump.key, pump.mode) + "&ack=true& "
-                # new pump state name
-                SET_PUMP_STATE_NAME = cutModeName(pump.mode)
-                # new pump state id
-                for x in range(len(pump.modes)):
-                    if SET_PUMP_STATE_NAME == pump.modes[x]:
-                        SET_PUMP_STATE = x
-                        break
-                sJson2Send = sJson2Send + "{}.{}.Pumpen.{}.Switch={}".format(IOB_DP_BASE_PATH, nSpaNum, pump.key, SET_PUMP_STATE) + "&ack=true& "
-            
-            # Lichter
-            print('sending lights')
-            for light in facade.lights:
-                print(f"{light.name}")
-                sJson2Send = sJson2Send + "{}.{}.Lichter.{}.Is_On={}".format(IOB_DP_BASE_PATH, nSpaNum, light.key, str(light.is_on).lower()) + "&ack=true& "
-                sJson2Send = sJson2Send + "{}.{}.Lichter.{}.Switch={}".format(IOB_DP_BASE_PATH, nSpaNum, light.key, str(light.is_on).lower()) + "&ack=true& "
-            
-            # Sensoren
-            print('sending sensors')
-            for binary_sensor in facade.binary_sensors:
-                print(f"{binary_sensor.name}")
-                sKey = binary_sensor.key
-                sKey = sKey.replace(" ", "_")
-                sKey = sKey.replace(":", "_")
-                sJson2Send = sJson2Send + "{}.{}.Sensoren.{}.State={}".format(IOB_DP_BASE_PATH, nSpaNum, sKey, urllib.parse.quote((str(binary_sensor.state)).lower())) + "&ack=true& "
+                # reset/close connection
+                await spaman.async_reset()
+                print("connection closed/reset")
+            else:
+                print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}")
+                print(f"status_sensor: {spaman.status_sensor.state}")
+                print(f"radio_sensor: {spaman.radio_sensor.state}")
+                print(f"channel_sensor: {spaman.channel_sensor.state}")
+                print(f"ping_sensor: {spaman.ping_sensor.state}")
+                # some sensors
+                sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Signal.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.radio_sensor.state))) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Channel.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.channel_sensor.state))) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.{}.Sensoren.Last_Ping.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.ping_sensor.state))) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.status_sensor.state)) + "&ack=true& "
 
     sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
     print(sJson2Send)

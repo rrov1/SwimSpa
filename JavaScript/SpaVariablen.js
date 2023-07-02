@@ -5,7 +5,7 @@ createDatapoints(2, 3, true);
 
 
 function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
-    const VERSION = "0.2.1"
+    const VERSION = "0.2.2"
     console.log("*** start: createDatapoints(nDevCnt: " + nDevCnt + ", nPumpCnt: " + nPumpCnt + ", createWaterfall: " + createWaterfall + ") v" + VERSION);
     var objectId, objectData;
 
@@ -666,7 +666,7 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         }
 
         // Sensoren: String
-        sSensors = ["CIRCULATING PUMP", "OZONE", "RF Channel", "Last Ping", "Status", "SMART WINTER MODE:RISK"];
+        sSensors = ["CIRCULATING PUMP", "OZONE", "Last Ping", "Status", "SMART WINTER MODE:RISK"];
         for (let i = 0; i < sSensors.length; i++) {
             setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_"), {
                 "type" : "channel",
@@ -708,6 +708,56 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
                 // Korrektur write Attribut
                 objectData = getObject(objectId);
                 objectData.common.write = false;
+                setObject(objectId, objectData, function (err) {
+                    if (err) log('cannot write object: ' + err);
+                });
+            }
+        }
+
+        // Sensoren: number
+        sSensors = ["RF Channel"];
+        for (let i = 0; i < sSensors.length; i++) {
+            setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_"), {
+                "type" : "channel",
+                "common" : {"name": sSensors[i]}
+            });
+
+            objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_") + ".Name";
+            if (!existsObject(objectId)) {
+                createState(objectId, {
+                    read: true, 
+                    write: false, 
+                    name: "Name", 
+                    type: "number", 
+                    role: "info.name",
+                    desc: "Name des Sensors",
+                    def: ""
+                });
+            } else {
+                // Korrektur write Attribut & type
+                objectData = getObject(objectId);
+                objectData.common.write = false;
+                setObject(objectId, objectData, function (err) {
+                    if (err) log('cannot write object: ' + err);
+                });
+            }
+
+            objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_") + ".State";
+            if (!existsObject(objectId)) {
+                createState(objectId, {
+                    read: true, 
+                    write: false, 
+                    name: "State", 
+                    type: "string", 
+                    role: "state",
+                    desc: "Sensorstatus",
+                    def: ""
+                });
+            } else {
+                // Korrektur write Attribut
+                objectData = getObject(objectId);
+                objectData.common.write = false;
+                objectData.common.type = "number";
                 setObject(objectId, objectData, function (err) {
                     if (err) log('cannot write object: ' + err);
                 });
