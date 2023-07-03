@@ -7,7 +7,7 @@ import signal
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.2"
+VERSION = "0.2.3"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -103,7 +103,6 @@ async def main() -> None:
                 print('sending water care')
                 myMode = await facade.spa.async_get_watercare()
                 print(f"current watercare mode: {myMode}")
-                sJson2Send = sJson2Send + "{}.{}.WasserpflegeIndex={}".format(IOB_DP_BASE_PATH, nSpaNum, myMode) + "&ack=true& "
                 sJson2Send = sJson2Send + "{}.{}.WasserpflegeSwitch={}".format(IOB_DP_BASE_PATH, nSpaNum, myMode) + "&ack=true& "
                 
                 # Pumpen

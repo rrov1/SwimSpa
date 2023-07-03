@@ -5,7 +5,7 @@ createDatapoints(2, 3, true);
 
 
 function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
-    const VERSION = "0.2.2"
+    const VERSION = "0.2.3"
     console.log("*** start: createDatapoints(nDevCnt: " + nDevCnt + ", nPumpCnt: " + nPumpCnt + ", createWaterfall: " + createWaterfall + ") v" + VERSION);
     var objectId, objectData;
 
@@ -299,44 +299,16 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             });
         }
 
+        // remove obsolete dp (use dp: WasserpflegeSwitch instead and use vis widget like basic - ValueList Text to display a text in the desired language)
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Wasserpflege";
-        if (!existsState(objectId)) {
-            createState(objectId, {
-                read: true, 
-                write: true, 
-                name: "Wasserpflege", 
-                type: "string", 
-                role: "info.status",
-                desc: "Status Wasserpflege",
-                def: ""
-            });
-        } else {
-            // Korrektur write Attribut
-            objectData = getObject(objectId);
-            objectData.common.write = false;
-            setObject(objectId, objectData, function (err) {
-                if (err) log('cannot write object: ' + err);
-            });
+        if (existsObject(objectId)) {
+            deleteState(objectId);
         }
 
-        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".WasserpflegeIndex";
-        if (!existsState(objectId)) {
-            createState(objectId, {
-                read: true, 
-                write: true, 
-                name: "WasserpflegeIndex", 
-                type: "number", 
-                role: "info.status",
-                desc: "Status Wasserpflege (Index)",
-                def: -1
-            });
-        } else {
-            // Korrektur write Attribut
-            objectData = getObject(objectId);
-            objectData.common.write = false;
-            setObject(objectId, objectData, function (err) {
-                if (err) log('cannot write object: ' + err);
-            });
+        // remove obsolete dp (use dp: WasserpflegeSwitch instead)
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".WasserpflegeIndex"
+        if (existsObject(objectId)) {
+            deleteState(objectId);
         }
 
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".WasserpflegeModi";

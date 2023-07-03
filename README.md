@@ -180,5 +180,9 @@ Diese Skripte werden jede Minute gestartet (Zeile 4 in `SpaUpdateValues.js`) um 
 * [X] Das Auslösen einer Aktion (Licht an/aus, Pumpe an/aus) braucht ca. 15 Sekunden bis es umgesetzt ist (liegt am Verbindungsaufbau der recht lange dauert bei der geckolib)
 * [X] Pfad zu den Python Skripten global konfigurierbar machen und die Anleitung dahingehend anpassen (auch Skriptbereitstellung)
 * [ ] Struktur der Datenpunkte noch mal etwas straffen:
-  * [ ] `javascript.0.Datenpunkte.SwimSpa.x.WasserpflegeIndex` -> entfällt zugunsten `WasserpflegeSwitch`
-* [ ] Python Scripte melden keine Statustexte mehr in Datenpunkte wie `javascript.0.Datenpunkte.SwimSpa.x.Wasserpflege` (nur noch den *Switch-Status), den zugehörigen z.B. deutschen Statustext kann ein Widget selbst darstellen (z.B. vis basic - ValueList Text oder eine Combobox)
+  * [X] `javascript.0.Datenpunkte.SwimSpa.x.WasserpflegeIndex` -> entfällt zugunsten `WasserpflegeSwitch`
+  * [ ] ...
+* [ ] Python Scripte melden keine Statustexte mehr in Datenpunkte:
+  * [X] `javascript.0.Datenpunkte.SwimSpa.x.Wasserpflege` -> entfällt zugunsten`WasserpflegeSwitch`, den zugehörigen z.B. deutschen Statustext kann ein Widget selbst darstellen (z.B. vis basic - ValueList Text oder eine Combobox)
+  * [ ] ...
+* [ ] Statussensor (`javascript.0.Datenpunkte.SwimSpa.x.Sensoren.Status.State`) Funktion herstellen (funktioniert momentant überhaupt nicht bzw. zeigt immer: Connected)
