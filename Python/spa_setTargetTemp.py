@@ -2,10 +2,11 @@ import sys
 import asyncio
 import logging
 import requests
+import signal
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -39,6 +40,13 @@ print(f"New target temp: {TARGET_TEMP}")
 IOBR_TARGET_TEMP_DP = sys.argv[5]
 print(f"Got datapoint to update: {IOBR_TARGET_TEMP_DP}")
 
+def set_run_timeout(timeout):
+    """Set maximum execution time of the current Python process"""
+    def alarm(*_):
+        raise SystemExit("Timed out: Maximum script runtime reached.")
+    signal.signal(signal.SIGALRM, alarm)
+    signal.alarm(timeout)
+
 class SampleSpaMan(GeckoAsyncSpaMan):
     """Sample spa man implementation"""
 
@@ -48,51 +56,64 @@ class SampleSpaMan(GeckoAsyncSpaMan):
         pass
 
 async def main() -> None:
+    set_run_timeout(30)
 
     async with SampleSpaMan(CLIENT_ID, spa_identifier=SPA_ID) as spaman:
-        print(f"*** connecting to spa")
-        # Wait for descriptors to be available
-        await spaman.wait_for_descriptors()
+        print(f"*** connecting to {SPA_ID}")
 
-        if len(spaman.spa_descriptors) == 0:
-            print("*** there were no spas found on your network.")
-            quit(-1)
-
-        print("*** connecting to spa")
+        #connect
         await spaman.async_connect(spa_identifier=SPA_ID)
 
         # Wait for the facade to be ready
-        await spaman.wait_for_facade()
+        result = await spaman.wait_for_facade()
 
-        if spaman.facade.water_heater.is_present:
-            print(f"*** water heater present")
-        else:
-            print(f"error: no water heater present returned from geckolib")
-            quit(-1)
-        
-        print(f"*** current target temp: {spaman.facade.water_heater.target_temperature}")
-
-        # check that new target temp is in temp range
-        if float(TARGET_TEMP) < float(spaman.facade.water_heater.min_temp):
-            print(f"error: new target temp ({TARGET_TEMP}) below minimum value ({spaman.facade.water_heater.min_temp})")
-            quit(-1)
-        if float(TARGET_TEMP) > float(spaman.facade.water_heater.max_temp):
-            print(f"error: new target temp ({TARGET_TEMP}) above maximum value ({spaman.facade.water_heater.max_temp})")
-            quit(-1)
-
-        if float(spaman.facade.water_heater.target_temperature) != float(TARGET_TEMP):
-            await spaman.facade.water_heater.async_set_target_temperature(TARGET_TEMP)
-            await asyncio.sleep(1)
-            print(f"*** target temp is now: {spaman.facade.water_heater.target_temperature}")
-        else:
-            print(f"*** new target temp is identical to current, nothing to do")
-        
-        #
+        print(f"*** connect result-> {result}")
         sJson2Send = ""
+        if result == True:
+            if spaman.facade.water_heater.is_present:
+                print(f"*** water heater present")
+            else:
+                print(f"error: no water heater present returned from geckolib")
+                quit(-1)
+            
+            print(f"*** current target temp: {spaman.facade.water_heater.target_temperature}")
 
-        # sending state updates to ioBroker
-        sJson2Send = sJson2Send + "{}={}".format(IOBR_TARGET_TEMP_DP, str(spaman.facade.water_heater.target_temperature)) + "&ack=true& "
+            # check that new target temp is in temp range
+            if float(TARGET_TEMP) < float(spaman.facade.water_heater.min_temp):
+                print(f"error: new target temp ({TARGET_TEMP}) below minimum value ({spaman.facade.water_heater.min_temp})")
+                quit(-1)
+            if float(TARGET_TEMP) > float(spaman.facade.water_heater.max_temp):
+                print(f"error: new target temp ({TARGET_TEMP}) above maximum value ({spaman.facade.water_heater.max_temp})")
+                quit(-1)
 
+            if float(spaman.facade.water_heater.target_temperature) != float(TARGET_TEMP):
+                await spaman.facade.water_heater.async_set_target_temperature(TARGET_TEMP)
+                await asyncio.sleep(1)
+                print(f"*** target temp is now: {spaman.facade.water_heater.target_temperature}")
+            else:
+                print(f"*** new target temp is identical to current, nothing to do")
+            
+            # sending state updates to ioBroker
+            sJson2Send = sJson2Send + "{}={}".format(IOBR_TARGET_TEMP_DP, str(spaman.facade.water_heater.target_temperature)) + "&ack=true& "
+            
+            # kurz warten (löst das Problem mit den längeren Wartezeiten)
+            await asyncio.sleep(1)
+            
+            # reset/close connection
+            await spaman.async_reset()
+            print("connection closed/reset")
+        else:
+            print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}")
+            print(f"status_sensor: {spaman.status_sensor.state}")
+            print(f"radio_sensor: {spaman.radio_sensor.state}")
+            print(f"channel_sensor: {spaman.channel_sensor.state}")
+            print(f"ping_sensor: {spaman.ping_sensor.state}")
+            # some sensors
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Signal.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.radio_sensor.state))) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Channel.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.channel_sensor.state))) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.Last_Ping.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.ping_sensor.state))) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.status_sensor.state)) + "&ack=true& "
+        
         sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
         #print(sJson2Send)
         try:

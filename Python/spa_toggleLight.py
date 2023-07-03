@@ -2,10 +2,11 @@ import sys
 import asyncio
 import logging
 import requests
+import signal
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -26,6 +27,13 @@ print(f"Switching light: {LIGHT_KEY}")
 IOBR_LIGHT_CHANNEL = sys.argv[5]
 print(f"Got channel for update: {IOBR_LIGHT_CHANNEL}")
 
+def set_run_timeout(timeout):
+    """Set maximum execution time of the current Python process"""
+    def alarm(*_):
+        raise SystemExit("Timed out: Maximum script runtime reached.")
+    signal.signal(signal.SIGALRM, alarm)
+    signal.alarm(timeout)
+
 class SampleSpaMan(GeckoAsyncSpaMan):
     """Sample spa man implementation"""
 
@@ -35,58 +43,73 @@ class SampleSpaMan(GeckoAsyncSpaMan):
         pass
 
 async def main() -> None:
+    set_run_timeout(30)
 
     async with SampleSpaMan(CLIENT_ID, spa_identifier=SPA_ID) as spaman:
-        print(f"*** connecting to spa")
-        # Wait for descriptors to be available
-        await spaman.wait_for_descriptors()
+        print(f"*** connecting to {SPA_ID}")
 
-        if len(spaman.spa_descriptors) == 0:
-            print("*** there were no spas found on your network.")
-            quit(-1)
-
-        print("*** connecting to spa")
+        #connect
         await spaman.async_connect(spa_identifier=SPA_ID)
 
         # Wait for the facade to be ready
-        await spaman.wait_for_facade()
+        result = await spaman.wait_for_facade()
 
-        if len(spaman.facade.lights) > 0:
-            print(f"*** light count: {len(spaman.facade.lights)}")
+        print(f"*** connect result-> {result}")
+        if result == True:
+            if len(spaman.facade.lights) > 0:
+                print(f"*** light count: {len(spaman.facade.lights)}")
+            else:
+                print(f"*** current light mode: {spaman.facade.lights[0].is_on}")
+                print(f"error: no pumps returned from geckolib")
+                quit(-1)
+
+            # search for light based on key
+            keyNotFound = True
+            for light in spaman.facade.lights:
+                if LIGHT_KEY == light.key:
+                    print(f"*** found light with key {LIGHT_KEY} and name: {light.name} with state {light.is_on}")
+                    keyNotFound = False
+                    if light.is_on:
+                        print(f"*** switching light off")
+                        await spaman.facade.lights[0].async_turn_off()
+                    else:
+                        print(f"*** switching light on")
+                        await spaman.facade.lights[0].async_turn_on()
+                    await asyncio.sleep(1)
+                    newLightMode = light.is_on
+                    break
+            
+            if keyNotFound:
+                print(f"error: light with key: {LIGHT_KEY} not found")
+                quit(-1)
+            
+            print(f"*** light mode is now: {newLightMode}")
+
+            #
+            sJson2Send = ""
+
+            # sending state updates to ioBroker
+            sJson2Send = sJson2Send + "{}.Switch={}".format(IOBR_LIGHT_CHANNEL, str(newLightMode).lower()) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.Is_On={}".format(IOBR_LIGHT_CHANNEL, str(newLightMode).lower()) + "&ack=true& "
+
+            # kurz warten (löst das Problem mit den längeren Wartezeiten)
+            await asyncio.sleep(1)
+            
+            # reset/close connection
+            await spaman.async_reset()
+            print("connection closed/reset")
         else:
-            print(f"*** current light mode: {spaman.facade.lights[0].is_on}")
-            print(f"error: no pumps returned from geckolib")
-            quit(-1)
-
-        # search for light based on key
-        keyNotFound = True
-        for light in spaman.facade.lights:
-            if LIGHT_KEY == light.key:
-                print(f"*** found light with key {LIGHT_KEY} and name: {light.name} with state {light.is_on}")
-                keyNotFound = False
-                if light.is_on:
-                    print(f"*** switching light off")
-                    await spaman.facade.lights[0].async_turn_off()
-                else:
-                    print(f"*** switching light on")
-                    await spaman.facade.lights[0].async_turn_on()
-                await asyncio.sleep(1)
-                newLightMode = light.is_on
-                break
+            print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}")
+            print(f"status_sensor: {spaman.status_sensor.state}")
+            print(f"radio_sensor: {spaman.radio_sensor.state}")
+            print(f"channel_sensor: {spaman.channel_sensor.state}")
+            print(f"ping_sensor: {spaman.ping_sensor.state}")
+            # some sensors
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Signal.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.radio_sensor.state))) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Channel.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.channel_sensor.state))) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.Last_Ping.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.ping_sensor.state))) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.status_sensor.state)) + "&ack=true& "
         
-        if keyNotFound:
-            print(f"error: light with key: {LIGHT_KEY} not found")
-            quit(-1)
-        
-        print(f"*** light mode is now: {newLightMode}")
-
-        #
-        sJson2Send = ""
-
-        # sending state updates to ioBroker
-        sJson2Send = sJson2Send + "{}.Switch={}".format(IOBR_LIGHT_CHANNEL, str(newLightMode).lower()) + "&ack=true& "
-        sJson2Send = sJson2Send + "{}.Is_On={}".format(IOBR_LIGHT_CHANNEL, str(newLightMode).lower()) + "&ack=true& "
-
         sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
         #print(sJson2Send)
         try:
@@ -99,7 +122,7 @@ async def main() -> None:
             if oResponse.status_code != 200:
                 print("respose text:")
                 print(oResponse.text)
-
+        
         # ende
         print("*** end")
         return

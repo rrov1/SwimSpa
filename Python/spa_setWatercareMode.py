@@ -2,6 +2,7 @@ import sys
 import asyncio
 import logging
 import requests
+import signal
 
 dictEn2De = {'Away From Home': 'Abwesend',
           'Standard': 'Standard', 
@@ -12,7 +13,7 @@ dictEn2De = {'Away From Home': 'Abwesend',
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -48,6 +49,13 @@ print(f"New watercare mode index: {NEW_WATERCAREMODE_IDX}")
 IOBR_DEVICE_PATH = sys.argv[5]
 print(f"Got device path to update: {IOBR_DEVICE_PATH}")
 
+def set_run_timeout(timeout):
+    """Set maximum execution time of the current Python process"""
+    def alarm(*_):
+        raise SystemExit("Timed out: Maximum script runtime reached.")
+    signal.signal(signal.SIGALRM, alarm)
+    signal.alarm(timeout)
+
 class SampleSpaMan(GeckoAsyncSpaMan):
     """Sample spa man implementation"""
 
@@ -57,44 +65,60 @@ class SampleSpaMan(GeckoAsyncSpaMan):
         pass
 
 async def main() -> None:
+    set_run_timeout(30)
 
     async with SampleSpaMan(CLIENT_ID, spa_identifier=SPA_ID) as spaman:
-        print(f"*** connecting to spa")
-        # Wait for descriptors to be available
-        await spaman.wait_for_descriptors()
+        print(f"*** connecting to {SPA_ID}")
 
-        if len(spaman.spa_descriptors) == 0:
-            print("*** there were no spas found on your network.")
-            quit(-1)
-
+        #connect
         await spaman.async_connect(spa_identifier=SPA_ID)
 
         # Wait for the facade to be ready
-        await spaman.wait_for_facade()
+        result = await spaman.wait_for_facade()
 
         # get current watercare mode
-        currentWatercareMode = spaman.facade.water_care.active_mode
+        # currentWatercareMode = spaman.facade.water_care.active_mode
+        currentWatercareMode = await spaman.facade.spa.async_get_watercare()
+        print(f"current watercare mode: {currentWatercareMode}")
         
-        #
+        print(f"*** connect result-> {result}")
         sJson2Send = ""
+        if result == True:
+            if currentWatercareMode == NEW_WATERCAREMODE_IDX:
+                print(f"*** nothing to do, old and new watercare mode are equal")
+                # sending state updates to ioBroker
+                sJson2Send = sJson2Send + "{}.WasserpflegeSwitch={}".format(IOBR_DEVICE_PATH, currentWatercareMode) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.WasserpflegeIndex={}".format(IOBR_DEVICE_PATH, currentWatercareMode) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.Wasserpflege={}".format(IOBR_DEVICE_PATH, dictEn2De[spaman.facade.water_care.modes[currentWatercareMode]]) + "&ack=true& "
+            else:
+                print(f"*** changing watercare mode from \"{spaman.facade.water_care.modes[currentWatercareMode]}\" to: \"{spaman.facade.water_care.modes[NEW_WATERCAREMODE_IDX]}\"")
 
-        if currentWatercareMode == NEW_WATERCAREMODE_IDX:
-            print(f"*** nothing to do, old and new watercare mode are equal")
-            # sending state updates to ioBroker
-            sJson2Send = sJson2Send + "{}.WasserpflegeSwitch={}".format(IOBR_DEVICE_PATH, currentWatercareMode) + "&ack=true& "
-            sJson2Send = sJson2Send + "{}.WasserpflegeIndex={}".format(IOBR_DEVICE_PATH, currentWatercareMode) + "&ack=true& "
-            sJson2Send = sJson2Send + "{}.Wasserpflege={}".format(IOBR_DEVICE_PATH, dictEn2De[spaman.facade.water_care.modes[currentWatercareMode]]) + "&ack=true& "
+                # set water care mode
+                await spaman.facade.water_care.async_set_mode(spaman.facade.water_care.modes[NEW_WATERCAREMODE_IDX])
+            
+                # sending state updates to ioBroker
+                sJson2Send = sJson2Send + "{}.WasserpflegeSwitch={}".format(IOBR_DEVICE_PATH, NEW_WATERCAREMODE_IDX) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.WasserpflegeIndex={}".format(IOBR_DEVICE_PATH, NEW_WATERCAREMODE_IDX) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.Wasserpflege={}".format(IOBR_DEVICE_PATH, dictEn2De[spaman.facade.water_care.modes[NEW_WATERCAREMODE_IDX]]) + "&ack=true& "
+            
+            # kurz warten (löst das Problem mit den längeren Wartezeiten)
+            await asyncio.sleep(1)
+            
+            # reset/close connection
+            await spaman.async_reset()
+            print("connection closed/reset")
         else:
-            print(f"*** changing watercare mode from \"{spaman.facade.water_care.modes[currentWatercareMode]}\" to: \"{spaman.facade.water_care.modes[NEW_WATERCAREMODE_IDX]}\"")
-
-            # set water care mode
-            await spaman.facade.water_care.async_set_mode(spaman.facade.water_care.modes[NEW_WATERCAREMODE_IDX])
+            print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}")
+            print(f"status_sensor: {spaman.status_sensor.state}")
+            print(f"radio_sensor: {spaman.radio_sensor.state}")
+            print(f"channel_sensor: {spaman.channel_sensor.state}")
+            print(f"ping_sensor: {spaman.ping_sensor.state}")
+            # some sensors
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Signal.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.radio_sensor.state))) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Channel.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.channel_sensor.state))) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.Last_Ping.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.ping_sensor.state))) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.status_sensor.state)) + "&ack=true& "
         
-            # sending state updates to ioBroker
-            sJson2Send = sJson2Send + "{}.WasserpflegeSwitch={}".format(IOBR_DEVICE_PATH, NEW_WATERCAREMODE_IDX) + "&ack=true& "
-            sJson2Send = sJson2Send + "{}.WasserpflegeIndex={}".format(IOBR_DEVICE_PATH, NEW_WATERCAREMODE_IDX) + "&ack=true& "
-            sJson2Send = sJson2Send + "{}.Wasserpflege={}".format(IOBR_DEVICE_PATH, dictEn2De[spaman.facade.water_care.modes[NEW_WATERCAREMODE_IDX]]) + "&ack=true& "
-
         sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
         print(sJson2Send)
         try:
