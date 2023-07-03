@@ -1,4 +1,4 @@
-// Pumpen ein-/ausschalten (regulärer Ausdruck um alle Pumpen im System zu steuern mit einer subscription)
+// Pumpen ein-/ausschalten (regulärer Ausdruck um alle Pumpen aller Contoller im System zu steuern mit einer subscription)
 on({id: /^javascript\.\d+\.Datenpunkte\.SwimSpa\.\d+\.Pumpen\.P\d+\.Switch$/, change: "any", ack: false}, function (obj) {
     switchPump(obj);
 });
@@ -6,7 +6,7 @@ on({id: /^javascript\.\d+\.Datenpunkte\.SwimSpa\.\d+\.Pumpen\.P\d+\.Switch$/, ch
 async function switchPump(obj) {
     var newState = obj.state.val;
     console.log("start");
-    var dpBasePath = BASE_ADAPTER + "." + BASE_FOLDER
+    var dpBasePath = BASE_ADAPTER + "." + BASE_FOLDER;
     // get client id
     var clientId = getState(getParent(obj.id, 4) + ".ClientGUID").val;
     //console.log("*** clientId: " + clientId);
