@@ -5,7 +5,7 @@ createDatapoints(2, 3, true);
 
 
 function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
-    const VERSION = "0.2.3"
+    const VERSION = "0.2.4"
     console.log("*** start: createDatapoints(nDevCnt: " + nDevCnt + ", nPumpCnt: " + nPumpCnt + ", createWaterfall: " + createWaterfall + ") v" + VERSION);
     var objectId, objectData;
 
@@ -700,7 +700,7 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
                     read: true, 
                     write: false, 
                     name: "Name", 
-                    type: "number", 
+                    type: "string", 
                     role: "info.name",
                     desc: "Name des Sensors",
                     def: ""
@@ -720,16 +720,16 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
                     read: true, 
                     write: false, 
                     name: "State", 
-                    type: "string", 
+                    type: "number", 
                     role: "state",
-                    desc: "Sensorstatus",
-                    def: ""
+                    desc: "Sensorstatus"
                 });
             } else {
                 // Korrektur write Attribut
                 objectData = getObject(objectId);
                 objectData.common.write = false;
                 objectData.common.type = "number";
+                objectData.common.def = -1;                
                 setObject(objectId, objectData, function (err) {
                     if (err) log('cannot write object: ' + err);
                 });
