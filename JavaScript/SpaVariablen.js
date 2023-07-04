@@ -5,7 +5,7 @@ createDatapoints(2, 3, true);
 
 
 function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
-    const VERSION = "0.2.4"
+    const VERSION = "0.2.5"
     console.log("*** start: createDatapoints(nDevCnt: " + nDevCnt + ", nPumpCnt: " + nPumpCnt + ", createWaterfall: " + createWaterfall + ") v" + VERSION);
     var objectId, objectData;
 
@@ -120,7 +120,7 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         def: ""
     }, function() {
         if (getState(BASE_FOLDER + ".ClientGUID").val == "") {
-            let guid = create_UUID();
+            let guid = uuid4();
             console.log("*** created guid: " + guid);
             setState(BASE_FOLDER + ".ClientGUID", guid, true);
         } else {
@@ -837,12 +837,28 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
     console.log("*** end: createDatapoints");
 }
 
-function create_UUID() {
-    var dt = new Date().getTime();
-    var uuid = 'xxxxxxxx-xxxx-xxxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = (dt + Math.random()*16)%16 | 0;
-        dt = Math.floor(dt/16);
-        return (c=='x' ? r :(r&0x3|0x8)).toString(16);
-    });
-    return uuid;
+// Quelle: https://stackoverflow.com/a/64976228
+// Anpassung da Math.random() von github als:
+// This uses a cryptographically insecure random number generated at Math.random() in a security context.
+// gekennzeichnet wurde. Kann man sich streiten, aber ich tausche die Funktion der Einfachheit halber.
+function uuid4() {
+  const crypto = require("crypto")
+  let array = new Uint8Array(16)
+  crypto.randomFillSync(array)
+
+  // Manipulate the 9th byte
+  array[8] &= 0b00111111 // Clear the first two bits
+  array[8] |= 0b10000000 // Set the first two bits to 10
+
+  // Manipulate the 7th byte
+  array[6] &= 0b00001111 // Clear the first four bits
+  array[6] |= 0b01000000 // Set the first four bits to 0100
+
+  const pattern = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+  let idx = 0
+
+  return pattern.replace(
+    /XX/g,
+    () => array[idx++].toString(16).padStart(2, "0"), // padStart ensures a leading zero, if needed
+  )
 }
