@@ -4,10 +4,11 @@ import requests
 import urllib.parse
 import logging
 import signal
+import json
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.3"
+VERSION = "0.2.4"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -63,6 +64,46 @@ class SampleSpaMan(GeckoAsyncSpaMan):
         #print(f"{event}: {kwargs}")
         pass
 
+def buildBulkGetforSpa(basePath, spaNum, facade):
+    # read current values for datapoints from ioBroker
+    ids2Get = ""
+    ids2Get = ids2Get + "{}.{}.Heizer".format(basePath, spaNum) + ","
+    ids2Get = ids2Get + "{}.{}.AktuelleTemperatur".format(basePath, spaNum) + ","
+    ids2Get = ids2Get + "{}.{}.ZielTemperatur".format(basePath, spaNum) + ","
+    ids2Get = ids2Get + "{}.{}.EchteZielTemperatur".format(basePath, spaNum) + ","
+    ids2Get = ids2Get + "{}.{}.WasserpflegeSwitch".format(basePath, spaNum) + ","
+    # Pumpen
+    for pump in facade.pumps:
+        ids2Get = ids2Get + "{}.{}.Pumpen.{}.Modus".format(basePath, spaNum, pump.key) + ","
+        ids2Get = ids2Get + "{}.{}.Pumpen.{}.Switch".format(basePath, spaNum, pump.key) + ","
+    # Lichter
+    for light in facade.lights:
+        ids2Get = ids2Get + "{}.{}.Lichter.{}.Is_On".format(basePath, spaNum, light.key) + ","
+        ids2Get = ids2Get + "{}.{}.Lichter.{}.Switch".format(basePath, spaNum, light.key) + ","
+    # Sensoren
+    for binary_sensor in facade.binary_sensors:
+        sKey = binary_sensor.key
+        sKey = sKey.replace(" ", "_")
+        sKey = sKey.replace(":", "_")
+        ids2Get = ids2Get + "{}.{}.Sensoren.{}.State".format(basePath, spaNum, sKey) + ","
+    # some sensors
+    ids2Get = ids2Get + "{}.{}.Sensoren.RF_Signal.State".format(basePath, spaNum) + ","
+    ids2Get = ids2Get + "{}.{}.Sensoren.RF_Channel.State".format(basePath, spaNum) + ","
+    ids2Get = ids2Get + "{}.{}.Sensoren.Last_Ping.State".format(basePath, spaNum) + ","
+    ids2Get = ids2Get + "{}.{}.Sensoren.Status.State".format(basePath, spaNum)
+
+    return ids2Get
+
+def search(keyName, keyValue, listOfDict):
+    return [element for element in listOfDict if element[keyName] == keyValue]
+
+def searchForValue(keyName, keyValue, valName, listOfDict):
+    # search a list of dicts, find a keyName with keyValue and return value of item valName in this dict
+    res = [element for element in listOfDict if element[keyName] == keyValue]
+    if len(res) > 0:
+        return res[0][valName]
+    return None
+ 
 async def main() -> None:
     sJson2Send = ""
     set_run_timeout(90)
@@ -81,50 +122,102 @@ async def main() -> None:
             print(f"*** connect result-> {result}")
             if result == True:
                 facade = spaman.facade
+                currentStates = ""
+                # read current states (update only when state change is here detected)
+                try:
+                    oResponse = requests.get("{}/getBulk/{}".format(IOBRURL, buildBulkGetforSpa(IOB_DP_BASE_PATH, nSpaNum, facade)))
+                except Exception as e:
+                    print(e)
+                    print("an error occured on sending an http request to ioBroker Rest API, no data was get, check url")
+                else:
+                    print(f"http response code: {oResponse.status_code}")
+                    if oResponse.status_code == 200:
+                        currentStates = json.loads(oResponse.text)
+                
+                print(f"type: {type(currentStates)}, len {len(currentStates)}")
+                for stateRow in range(len(currentStates)):
+                    print(f"{stateRow}: {currentStates[stateRow]['id']}, val: {currentStates[stateRow]['val']}, type: {type(currentStates[stateRow])}")
+
                 print("sending heater ops")
                 print(f'heater present-> {facade.water_heater.is_present}')
                 print(f"current heater operation-> {facade.water_heater.current_operation}")
-                sJson2Send = sJson2Send + "{}.{}.Heizer={}".format(IOB_DP_BASE_PATH, nSpaNum, facade.water_heater.current_operation) + "&ack=true& "
+                ioBrDp = "{}.{}.Heizer".format(IOB_DP_BASE_PATH, nSpaNum)
+                currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                if currentIoBrVal != facade.water_heater.current_operation:
+                    print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {facade.water_heater.current_operation}")
+                    sJson2Send = sJson2Send + "{}={}".format(ioBrDp, facade.water_heater.current_operation) + "&ack=true& "
                 
                 # Temperaturen
                 print('sending temp')
                 # temp value must be within min/max temp +/-10 degrees
-                if float(facade.water_heater.current_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.current_temperature) < (float(facade.water_heater.max_temp) + 10):
-                    print(f"current temp-> {round(facade.water_heater.current_temperature, 2)}")
-                    sJson2Send = sJson2Send + "{}.{}.AktuelleTemperatur={}".format(IOB_DP_BASE_PATH, nSpaNum, round(facade.water_heater.current_temperature, 2)) + "&ack=true& "
-                if float(facade.water_heater.target_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.target_temperature) < (float(facade.water_heater.max_temp) + 10):
-                    print(f"target temp-> {round(facade.water_heater.target_temperature, 2)}")
-                    sJson2Send = sJson2Send + "{}.{}.ZielTemperatur={}".format(IOB_DP_BASE_PATH, nSpaNum, round(facade.water_heater.target_temperature, 2)) + "&ack=true& "
-                if float(facade.water_heater.real_target_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.real_target_temperature) < (float(facade.water_heater.max_temp) + 10):
-                    print(f"real target temp-> {round(facade.water_heater.real_target_temperature, 2)}")
-                    sJson2Send = sJson2Send + "{}.{}.EchteZielTemperatur={}".format(IOB_DP_BASE_PATH, nSpaNum, round(facade.water_heater.real_target_temperature, 2)) + "&ack=true& "
+                ioBrDp = "{}.{}.AktuelleTemperatur".format(IOB_DP_BASE_PATH, nSpaNum)
+                currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                if currentIoBrVal != round(facade.water_heater.current_temperature, 2):
+                    print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {round(facade.water_heater.current_temperature, 2)}")
+                    if float(facade.water_heater.current_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.current_temperature) < (float(facade.water_heater.max_temp) + 10):
+                        print(f"current temp-> {round(facade.water_heater.current_temperature, 2)}")
+                        sJson2Send = sJson2Send + "{}={}".format(ioBrDp, round(facade.water_heater.current_temperature, 2)) + "&ack=true& "
+                ioBrDp = "{}.{}.ZielTemperatur".format(IOB_DP_BASE_PATH, nSpaNum)
+                currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                if currentIoBrVal != round(facade.water_heater.target_temperature, 2):
+                    print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {round(facade.water_heater.target_temperature, 2)}")
+                    if float(facade.water_heater.target_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.target_temperature) < (float(facade.water_heater.max_temp) + 10):
+                        print(f"target temp-> {round(facade.water_heater.target_temperature, 2)}")
+                        sJson2Send = sJson2Send + "{}={}".format(ioBrDp, round(facade.water_heater.target_temperature, 2)) + "&ack=true& "
+                ioBrDp = "{}.{}.EchteZielTemperatur".format(IOB_DP_BASE_PATH, nSpaNum)
+                currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                if currentIoBrVal != round(facade.water_heater.real_target_temperature, 2):
+                    print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {round(facade.water_heater.real_target_temperature, 2)}")
+                    if float(facade.water_heater.real_target_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.real_target_temperature) < (float(facade.water_heater.max_temp) + 10):
+                        print(f"real target temp-> {round(facade.water_heater.real_target_temperature, 2)}")
+                        sJson2Send = sJson2Send + "{}={}".format(ioBrDp, round(facade.water_heater.real_target_temperature, 2)) + "&ack=true& "
                 
                 # Wasserprflege
                 print('sending water care')
                 myMode = await facade.spa.async_get_watercare()
                 print(f"current watercare mode: {myMode}")
-                sJson2Send = sJson2Send + "{}.{}.WasserpflegeSwitch={}".format(IOB_DP_BASE_PATH, nSpaNum, myMode) + "&ack=true& "
+                ioBrDp = "{}.{}.WasserpflegeSwitch".format(IOB_DP_BASE_PATH, nSpaNum)
+                currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                if currentIoBrVal != myMode:
+                    print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {myMode}")
+                    sJson2Send = sJson2Send + "{}={}".format(ioBrDp, myMode) + "&ack=true& "
                 
                 # Pumpen
                 print('sending pumps')
                 for pump in facade.pumps:
                     print(f"{pump.name}-> {pump.mode}, {pump.modes}")
-                    sJson2Send = sJson2Send + "{}.{}.Pumpen.{}.Modus={}".format(IOB_DP_BASE_PATH, nSpaNum, pump.key, pump.mode) + "&ack=true& "
-                    # new pump state name
-                    SET_PUMP_STATE_NAME = cutModeName(pump.mode)
-                    # new pump state id
+                    ioBrDp = "{}.{}.Pumpen.{}.Modus".format(IOB_DP_BASE_PATH, nSpaNum, pump.key)
+                    currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                    if currentIoBrVal != pump.mode:
+                        print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {pump.mode}")
+                        sJson2Send = sJson2Send + "{}={}".format(ioBrDp, pump.mode) + "&ack=true& "
+                    # short pump state name
+                    shortPumpStateNAme = cutModeName(pump.mode)
+                    # calculate new pump state id
                     for x in range(len(pump.modes)):
-                        if SET_PUMP_STATE_NAME == pump.modes[x]:
-                            SET_PUMP_STATE = x
+                        if shortPumpStateNAme == pump.modes[x]:
+                            pumpStateId = x
                             break
-                    sJson2Send = sJson2Send + "{}.{}.Pumpen.{}.Switch={}".format(IOB_DP_BASE_PATH, nSpaNum, pump.key, SET_PUMP_STATE) + "&ack=true& "
+                    ioBrDp = "{}.{}.Pumpen.{}.Switch".format(IOB_DP_BASE_PATH, nSpaNum, pump.key)
+                    currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                    if currentIoBrVal != pumpStateId:
+                        print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {pumpStateId}")
+                        sJson2Send = sJson2Send + "{}={}".format(ioBrDp, pumpStateId) + "&ack=true& "
                 
                 # Lichter
                 print('sending lights')
                 for light in facade.lights:
                     print(f"{light.name}-> {str(light.is_on).lower()}")
-                    sJson2Send = sJson2Send + "{}.{}.Lichter.{}.Is_On={}".format(IOB_DP_BASE_PATH, nSpaNum, light.key, str(light.is_on).lower()) + "&ack=true& "
-                    sJson2Send = sJson2Send + "{}.{}.Lichter.{}.Switch={}".format(IOB_DP_BASE_PATH, nSpaNum, light.key, str(light.is_on).lower()) + "&ack=true& "
+                    ioBrDp = "{}.{}.Lichter.{}.Is_On".format(IOB_DP_BASE_PATH, nSpaNum, light.key)
+                    currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                    if str(currentIoBrVal).lower() != str(light.is_on).lower():
+                        print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {str(light.is_on).lower()}")
+                        sJson2Send = sJson2Send + "{}={}".format(ioBrDp, str(light.is_on).lower()) + "&ack=true& "
+                    ioBrDp = "{}.{}.Lichter.{}.Switch".format(IOB_DP_BASE_PATH, nSpaNum, light.key)
+                    currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                    if str(currentIoBrVal).lower() != str(light.is_on).lower():
+                        print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {str(light.is_on).lower()}")
+                        sJson2Send = sJson2Send + "{}={}".format(ioBrDp, str(light.is_on).lower()) + "&ack=true& "
                 
                 # Sensoren
                 print('sending sensors')
@@ -133,19 +226,35 @@ async def main() -> None:
                     sKey = binary_sensor.key
                     sKey = sKey.replace(" ", "_")
                     sKey = sKey.replace(":", "_")
-                    sJson2Send = sJson2Send + "{}.{}.Sensoren.{}.State={}".format(IOB_DP_BASE_PATH, nSpaNum, sKey, urllib.parse.quote((str(binary_sensor.state)).lower())) + "&ack=true& "
+                    ioBrDp = "{}.{}.Sensoren.{}.State".format(IOB_DP_BASE_PATH, nSpaNum, sKey)
+                    currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                    if str(currentIoBrVal).lower() != str(binary_sensor.state).lower():
+                        print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {str(binary_sensor.state).lower()}")
+                        sJson2Send = sJson2Send + "{}={}".format(ioBrDp, urllib.parse.quote((str(binary_sensor.state)).lower())) + "&ack=true& "
                 
                 # spaman sensoren
                 print('sending other sensors')
-                print(f"status_sensor-> {spaman.status_sensor.state}")
-                print(f"radio_sensor-> {spaman.radio_sensor.state}")
-                print(f"channel_sensor-> {spaman.channel_sensor.state}")
-                print(f"ping_sensor-> {spaman.ping_sensor.state}")
                 
-                # some sensors
-                sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Signal.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.radio_sensor.state))) + "&ack=true& "
-                sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Channel.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.channel_sensor.state))) + "&ack=true& "
+                print(f"radio_sensor-> {spaman.radio_sensor.state}")
+                ioBrDp = "{}.{}.Sensoren.RF_Signal.State".format(IOB_DP_BASE_PATH, nSpaNum)
+                currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                if currentIoBrVal != spaman.radio_sensor.state:
+                    print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {str(spaman.radio_sensor.state)}")
+                    sJson2Send = sJson2Send + "{}={}".format(ioBrDp, urllib.parse.quote(str(spaman.radio_sensor.state))) + "&ack=true& "
+                
+                print(f"channel_sensor-> {spaman.channel_sensor.state}")
+                ioBrDp = "{}.{}.Sensoren.RF_Channel.State".format(IOB_DP_BASE_PATH, nSpaNum)
+                currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                if currentIoBrVal != spaman.channel_sensor.state:
+                    print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {str(spaman.channel_sensor.state)}")
+                    sJson2Send = sJson2Send + "{}={}".format(ioBrDp, urllib.parse.quote(str(spaman.channel_sensor.state))) + "&ack=true& "
+                
+                print(f"ping_sensor-> {spaman.ping_sensor.state}")
+                # send always
                 sJson2Send = sJson2Send + "{}.{}.Sensoren.Last_Ping.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.ping_sensor.state))) + "&ack=true& "
+
+                print(f"status_sensor-> {spaman.status_sensor.state}")
+                # send always
                 sJson2Send = sJson2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.status_sensor.state)) + "&ack=true& "
                 print("finished reading all data")
 
