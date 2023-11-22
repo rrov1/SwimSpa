@@ -8,7 +8,7 @@ import json
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.4"
+VERSION = "0.2.5"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -136,7 +136,8 @@ async def main() -> None:
                 
                 print(f"type: {type(currentStates)}, len {len(currentStates)}")
                 for stateRow in range(len(currentStates)):
-                    print(f"{stateRow}: {currentStates[stateRow]['id']}, val: {currentStates[stateRow]['val']}, type: {type(currentStates[stateRow])}")
+                    if 'val' in currentStates[stateRow]:
+                        print(f"{stateRow}: {currentStates[stateRow]['id']}, val: {currentStates[stateRow]['val']}, type: {type(currentStates[stateRow])}")
 
                 print("sending heater ops")
                 print(f'heater present-> {facade.water_heater.is_present}')
