@@ -3,6 +3,7 @@ import asyncio
 import logging
 import requests
 import signal
+import urllib.parse
 
 dictEn2De = {'Away From Home': 'Abwesend',
           'Standard': 'Standard', 
@@ -13,7 +14,7 @@ dictEn2De = {'Away From Home': 'Abwesend',
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.3"
+VERSION = "0.2.4"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -110,10 +111,10 @@ async def main() -> None:
             print(f"channel_sensor: {spaman.channel_sensor.state}")
             print(f"ping_sensor: {spaman.ping_sensor.state}")
             # some sensors
-            sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Signal.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.radio_sensor.state))) + "&ack=true& "
-            sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Channel.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.channel_sensor.state))) + "&ack=true& "
-            sJson2Send = sJson2Send + "{}.{}.Sensoren.Last_Ping.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.ping_sensor.state))) + "&ack=true& "
-            sJson2Send = sJson2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.status_sensor.state)) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.Sensoren.RF_Signal.State={}".format(IOBR_DEVICE_PATH, urllib.parse.quote(str(spaman.radio_sensor.state))) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.Sensoren.RF_Channel.State={}".format(IOBR_DEVICE_PATH, urllib.parse.quote(str(spaman.channel_sensor.state))) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.Sensoren.Last_Ping.State={}".format(IOBR_DEVICE_PATH, urllib.parse.quote(str(spaman.ping_sensor.state))) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.Sensoren.Status.State={}".format(IOBR_DEVICE_PATH, urllib.parse.quote(spaman.status_sensor.state)) + "&ack=true& "
         
         sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
         print(sJson2Send)
