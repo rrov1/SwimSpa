@@ -90,7 +90,7 @@ Die Python-Skripte werden von den Javascript-Skripten aus aufgerufen mit den nö
 
 #### Voraussetzungen
 
-* Adapter: Simple Rest API installiert und eine Instanz am laufen
+* Adapter: "Simple RESTful API" installiert und eine Instanz am laufen
 * Adapter: Javascript/Blockly installiert und eine Instanz am laufen
 * Konfiguration des Javascript Adapters anpassen:
   * Option: Enable Command "setObject" - ist aktiviert
