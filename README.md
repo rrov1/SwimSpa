@@ -90,7 +90,7 @@ Die Python-Skripte werden von den Javascript-Skripten aus aufgerufen mit den nö
 
 #### Voraussetzungen
 
-* Adapter: "Simple RESTful API" installiert und eine Instanz am laufen
+* Adapter: "Simple RESTful API" installiert und eine konfigurierte Instanz am laufen (bitte prüfen, dass die IP in der Instanzkonfiguration passend eingestellt ist, getestet sind die Skripte mit IPv4, egal ob 0.0.0.0 oder die IP des Netzwerkadapters)
 * Adapter: Javascript/Blockly installiert und eine Instanz am laufen
 * Konfiguration des Javascript Adapters anpassen:
   * Option: Enable Command "setObject" - ist aktiviert
