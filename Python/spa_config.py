@@ -5,13 +5,13 @@ import requests
 import urllib
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.2"
+VERSION = "0.2.3"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
 if len(sys.argv) != 4:
-    print("*** Wrong number of script arguments.\n")
-    print(f"*** call example: {sys.argv[0]} clientId ioBrSimpleRestApiUrl dpBasePath ")
+    print("*** Wrong number of script arguments.", file=sys.stderr)
+    print(f"*** call example: {sys.argv[0]} clientId ioBrSimpleRestApiUrl dpBasePath ", file=sys.stderr)
     quit(-1)
 
 print("total arguments passed:", len(sys.argv))
@@ -38,8 +38,8 @@ async def main() -> None:
         await spaman.wait_for_descriptors()
 
         if len(spaman.spa_descriptors) == 0:
-            print("*** there were no spas found on your network.")
-            return
+            print("*** there were no spas found on your network.", file=sys.stderr)
+            quit(-1)
 
         # get all spa names
         allNames = []
