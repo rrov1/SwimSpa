@@ -13,6 +13,9 @@ async function setTargetTemp(obj) {
     // get spa id
     var spaId = getState(getParent(obj.id, 1) + ".ID").val;
     //console.log("*** spaId: " + spaId);
+    //get spa IP
+    var spaIP = getState(getParent(obj.id, 1) + ".IPAddresse").val;
+    //console.log("*** spaIP: " + spaIP);
     var pyScriptFolder = PY_SCRIPTS_FOLDER;
     if (!pyScriptFolder.endsWith("/")) {
         pyScriptFolder += "/";
@@ -39,8 +42,8 @@ async function setTargetTemp(obj) {
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
     // spa_setTargetTemp.py clientId restApiUrl spaId targetTemp targetTempDatapoint
-    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_setTargetTemp.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + newState + " " + obj.id);
-    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_setTargetTemp.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + newState + " " + obj.id);
+    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_setTargetTemp.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + newState + " " + obj.id);
+    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_setTargetTemp.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + newState + " " + obj.id);
 
     // signal that there is no longer a script is running
     setState(dpBasePath + '.scriptRunning', {val: false, ack: true});

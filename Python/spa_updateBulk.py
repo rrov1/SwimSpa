@@ -8,13 +8,13 @@ import json
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.6"
+VERSION = "0.2.7"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
-if len(sys.argv) != 5:
-    print("*** Wrong number of script arguments.\n")
-    print(f"*** call example: {sys.argv[0]} clientId ioBrSimpleRestApiUrl spaIds dpBasePath")
+if len(sys.argv) != 6:
+    print("*** Wrong number of script arguments.", file=sys.stderr)
+    print(f"*** call example: {sys.argv[0]} clientId ioBrSimpleRestApiUrl spaIds spaIPs dpBasePath", file=sys.stderr)
     quit(-1)
 
 print("total arguments passed:", len(sys.argv))
@@ -29,7 +29,14 @@ if (spaIds.find(",") >= 0):
 else:
     SPA_ID = [spaIds]
     print(f"Connecting to spa id {spaIds}")
-IOB_DP_BASE_PATH = sys.argv[4]
+spaIPs = sys.argv[4]
+if (spaIPs.find(",") >= 0):
+    SPA_IP = spaIPs.split(",")
+    print(f"Connecting to spa ips {spaIPs}")
+else:
+    SPA_IP = [spaIPs]
+    print(f"Connecting to spa ip {spaIPs}")
+IOB_DP_BASE_PATH = sys.argv[5]
 print(f"Base path to datapoints: {IOB_DP_BASE_PATH}")
 
 dictEn2De = {'Away From Home': 'Abwesend',
@@ -110,11 +117,13 @@ async def main() -> None:
 
     for nSpaNum in range(len(SPA_ID)):
         spa = SPA_ID[nSpaNum]
-        async with SampleSpaMan(CLIENT_ID, spa_identifier=spa) as spaman:
+        ip = SPA_IP[nSpaNum]
+        
+        async with SampleSpaMan(CLIENT_ID, spa_identifier=spa, spa_address=ip) as spaman:
             print(f"*** {nSpaNum}: connecting to {spa}")
             
             # connect
-            await spaman.async_connect(spa_identifier=spa)
+            await spaman.async_connect(spa_identifier=spa, spa_address=ip)
 
             # Wait for the facade to be ready
             result = await spaman.wait_for_facade()
@@ -266,16 +275,8 @@ async def main() -> None:
                 await spaman.async_reset()
                 print("connection closed/reset")
             else:
-                print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}")
-                print(f"status_sensor: {spaman.status_sensor.state}")
-                print(f"radio_sensor: {spaman.radio_sensor.state}")
-                print(f"channel_sensor: {spaman.channel_sensor.state}")
-                print(f"ping_sensor: {spaman.ping_sensor.state}")
-                # some sensors
-                sData2Send = sData2Send + "{}.{}.Sensoren.RF_Signal.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.radio_sensor.state))) + "&ack=true& "
-                sData2Send = sData2Send + "{}.{}.Sensoren.RF_Channel.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.channel_sensor.state))) + "&ack=true& "
-                sData2Send = sData2Send + "{}.{}.Sensoren.Last_Ping.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.ping_sensor.state))) + "&ack=true& "
-                sData2Send = sData2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.status_sensor.state)) + "&ack=true& "
+                print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}", file=sys.stderr)
+                sData2Send = sData2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote("Connect failed")) + "&ack=true& "
     
     if len(sData2Send) > 0:
         sData2Send = sData2Send[:len(sData2Send)-2] + ""
@@ -286,7 +287,7 @@ async def main() -> None:
             oResponse = requests.post("{}/setBulk".format(IOBRURL), data = sData2Send)
         except Exception as e:
             print(e)
-            print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url")
+            print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url", file=sys.stderr)
         else:
             print(f"http response code: {oResponse.status_code}")
             if oResponse.status_code != 200:

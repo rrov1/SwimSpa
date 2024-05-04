@@ -12,14 +12,19 @@ async function updateSpaValues() {
     var clientId = await getState(dpBasePath + ".ClientGUID").val;
     //console.log("*** clientId: " + clientId);
     // alle spa id's (wir gehen mal davon aus, das sie immer sortiert sind)
-    var spaIdList = "";
+    var spaIdList = "", spaIPList = "";
     $('state[id=' + BASE_ADAPTER + "." + BASE_FOLDER + '*.ID]').each(function(id, i) {
         spaIdList = spaIdList + getState(id).val + ",";
+        spaIPList = spaIPList + getState(id.replace(".ID", ".IPAddresse")).val + ",";
     });
     if (spaIdList.endsWith(",")) {
         spaIdList = spaIdList.substring(0, spaIdList.length - 1);
     }
+    if (spaIPList.endsWith(",")) {
+        spaIPList = spaIPList.substring(0, spaIPList.length - 1);
+    }
     //console.log("*** spaIdList: " + spaIdList);
+    //console.log("*** spaIPList: " + spaIPList);
     var pyScriptFolder = PY_SCRIPTS_FOLDER;
     if (!pyScriptFolder.endsWith("/")) {
         pyScriptFolder += "/";
@@ -46,8 +51,8 @@ async function updateSpaValues() {
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
     // spa_updateBulk.py clientId restApiUrl spaIdList dpBasePath
-    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_updateBulk.py ' + clientId + " " + getRestApiUrl() + " " + spaIdList + " " + dpBasePath);
-    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_updateBulk.py ' + clientId + " " + getRestApiUrl() + " " + spaIdList + " " + dpBasePath);
+    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_updateBulk.py ' + clientId + " " + getRestApiUrl() + " " + spaIdList + " " + spaIPList + " " + dpBasePath);
+    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_updateBulk.py ' + clientId + " " + getRestApiUrl() + " " + spaIdList + " " + spaIPList + " " + dpBasePath);
 
     // signal that there is no longer a script is running
     setState(dpBasePath + '.scriptRunning', {val: false, ack: true});

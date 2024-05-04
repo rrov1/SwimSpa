@@ -14,13 +14,13 @@ dictEn2De = {'Away From Home': 'Abwesend',
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.4"
+VERSION = "0.2.5"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
-if len(sys.argv) != 6:
-    print("*** Wrong number of script arguments.")
-    print("*** call example: {sys.argv[0]} clientId restApiUrl spaId waterCareModeIdx devicePath")
+if len(sys.argv) != 7:
+    print("*** Wrong number of script arguments.", file=sys.stderr)
+    print("*** call example: {sys.argv[0]} clientId restApiUrl spaId spaIP waterCareModeIdx devicePath", file=sys.stderr)
     quit(-1)
 
 def is_integer(n):
@@ -38,16 +38,18 @@ IOBRURL = sys.argv[2]
 print(f"ioBroker Simple Rest API URL: {IOBRURL}")
 SPA_ID = sys.argv[3]
 print(f"Connecting to spa id {SPA_ID}")
-NEW_WATERCAREMODE_IDX = sys.argv[4]
+SPA_IP = sys.argv[4]
+print(f"Connecting to spa id {SPA_IP}")
+NEW_WATERCAREMODE_IDX = sys.argv[5]
 if (not is_integer(NEW_WATERCAREMODE_IDX)):
-    print(f"error: value {NEW_WATERCAREMODE_IDX} of argument 3 is not an int")
+    print(f"error: value {NEW_WATERCAREMODE_IDX} of argument 4 is not an int", file=sys.stderr)
     quit(-1)
 NEW_WATERCAREMODE_IDX = int(NEW_WATERCAREMODE_IDX)
 if (NEW_WATERCAREMODE_IDX < 0 and NEW_WATERCAREMODE_IDX > 4):
-    print(f"error: value {NEW_WATERCAREMODE_IDX} is out of allowed range")
+    print(f"error: value {NEW_WATERCAREMODE_IDX} is out of allowed range", file=sys.stderr)
     quit(-1)
 print(f"New watercare mode index: {NEW_WATERCAREMODE_IDX}")
-IOBR_DEVICE_PATH = sys.argv[5]
+IOBR_DEVICE_PATH = sys.argv[6]
 print(f"Got device path to update: {IOBR_DEVICE_PATH}")
 
 def set_run_timeout(timeout):
@@ -58,8 +60,6 @@ def set_run_timeout(timeout):
     signal.alarm(timeout)
 
 class SampleSpaMan(GeckoAsyncSpaMan):
-    """Sample spa man implementation"""
-
     async def handle_event(self, event: GeckoSpaEvent, **kwargs) -> None:
         # Uncomment this line to see events generated
         # print(f"{event}: {kwargs}")
@@ -68,11 +68,11 @@ class SampleSpaMan(GeckoAsyncSpaMan):
 async def main() -> None:
     set_run_timeout(30)
 
-    async with SampleSpaMan(CLIENT_ID, spa_identifier=SPA_ID) as spaman:
-        print(f"*** connecting to {SPA_ID}")
+    async with SampleSpaMan(CLIENT_ID, spa_identifier=SPA_ID, spa_address=SPA_IP) as spaman:
+        print(f"*** connecting to {SPA_ID} with ip {SPA_IP}")
 
         #connect
-        await spaman.async_connect(spa_identifier=SPA_ID)
+        await spaman.async_connect(spa_identifier=SPA_ID, spa_address=SPA_IP)
 
         # Wait for the facade to be ready
         result = await spaman.wait_for_facade()
@@ -105,16 +105,8 @@ async def main() -> None:
             await spaman.async_reset()
             print("connection closed/reset")
         else:
-            print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}")
-            print(f"status_sensor: {spaman.status_sensor.state}")
-            print(f"radio_sensor: {spaman.radio_sensor.state}")
-            print(f"channel_sensor: {spaman.channel_sensor.state}")
-            print(f"ping_sensor: {spaman.ping_sensor.state}")
-            # some sensors
-            sJson2Send = sJson2Send + "{}.Sensoren.RF_Signal.State={}".format(IOBR_DEVICE_PATH, urllib.parse.quote(str(spaman.radio_sensor.state))) + "&ack=true& "
-            sJson2Send = sJson2Send + "{}.Sensoren.RF_Channel.State={}".format(IOBR_DEVICE_PATH, urllib.parse.quote(str(spaman.channel_sensor.state))) + "&ack=true& "
-            sJson2Send = sJson2Send + "{}.Sensoren.Last_Ping.State={}".format(IOBR_DEVICE_PATH, urllib.parse.quote(str(spaman.ping_sensor.state))) + "&ack=true& "
-            sJson2Send = sJson2Send + "{}.Sensoren.Status.State={}".format(IOBR_DEVICE_PATH, urllib.parse.quote(spaman.status_sensor.state)) + "&ack=true& "
+            print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}", file=sys.stderr)
+            sJson2Send = sJson2Send + "{}.Sensoren.Status.State={}".format(IOBR_DEVICE_PATH, urllib.parse.quote("Connect failed")) + "&ack=true& "
         
         sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
         print(sJson2Send)
@@ -122,7 +114,7 @@ async def main() -> None:
             oResponse = requests.post("{}/setBulk".format(IOBRURL), data = sJson2Send)
         except Exception as e:
             print(e)
-            print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url")
+            print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url", file=sys.stderr)
         else:
             print(f"http response code: {oResponse.status_code}")
             if oResponse.status_code != 200:

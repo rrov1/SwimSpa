@@ -13,6 +13,9 @@ async function setWatercareMode(obj) {
     // get spa id
     var spaId = getState(getParent(obj.id, 1) + ".ID").val;
     //console.log("*** spaId: " + spaId);
+    //get spa IP
+    var spaIP = getState(getParent(obj.id, 1) + ".IPAddresse").val;
+    //console.log("*** spaIP: " + spaIP);
     // neuer Wasserpflegemodus Index
     //console.log("*** new watercare mode index: " + newWaterCareModeIdx);
     var pyScriptFolder = PY_SCRIPTS_FOLDER;
@@ -41,8 +44,8 @@ async function setWatercareMode(obj) {
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
     // spa_toggleLight.py clientId restApiUrl spaId lightKey lightChannel
-    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_setWatercareMode.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + newWaterCareModeIdx + " " + getParent(obj.id, 1));
-    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_setWatercareMode.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + newWaterCareModeIdx + " " + getParent(obj.id, 1));
+    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_setWatercareMode.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + newWaterCareModeIdx + " " + getParent(obj.id, 1));
+    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_setWatercareMode.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + newWaterCareModeIdx + " " + getParent(obj.id, 1));
 
     // signal that there is no longer a script is running
     setState(dpBasePath + '.scriptRunning', {val: false, ack: true});

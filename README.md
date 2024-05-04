@@ -149,10 +149,10 @@ Werte die sich häufig ändern werden minütlich von `SpaUpdateValues` aktualisi
 
 | **Zweck**                                   | **Javascript**                                                                       | **Python Skript**                                                               |
 | --------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Schalten der Pumpen                         | `PumpSwitches` (Datei: [PumpSwitches.js](JavaScript/PumpSwitches.js))                | `spa_switchPump.py clientId restApiUrl spaId pumpId newPumpState pumpChannel`   |
-| Schalten der Beleuchtung                    | `LightToggle` (Datei: [LightToggle.js](JavaScript/LightToggle.js))                   | `spa_toggleLight.py clientId restApiUrl spaId lightKey lightChannel`            |
-| Setzen der Zieltemperatur                   | `TargetTemp` (Datei: [TargetTemp.js](JavaScript/TargetTemp.js))                      | `spa_setTargetTemp.py clientId restApiUrl spaId targetTemp targetTempDatapoint` |
-| Setzen des Wasserpflegemodus                | `WatercareMode` (Datei: [WatercareMode.js](JavaScript/WatercareMode.js))             | `spa_setWatercareMode.py ClientGUID SpaId waterCareModeIdx devicePath`          |
+| Schalten der Pumpen                         | `PumpSwitches` (Datei: [PumpSwitches.js](JavaScript/PumpSwitches.js))                | `spa_switchPump.py clientId restApiUrl spaId spaIP pumpId newPumpState pumpChannel`   |
+| Schalten der Beleuchtung                    | `LightToggle` (Datei: [LightToggle.js](JavaScript/LightToggle.js))                   | `spa_toggleLight.py clientId restApiUrl spaId spaIP lightKey lightChannel`            |
+| Setzen der Zieltemperatur                   | `TargetTemp` (Datei: [TargetTemp.js](JavaScript/TargetTemp.js))                      | `spa_setTargetTemp.py clientId restApiUrl spaId spaIP targetTemp targetTempDatapoint` |
+| Setzen des Wasserpflegemodus                | `WatercareMode` (Datei: [WatercareMode.js](JavaScript/WatercareMode.js))             | `spa_setWatercareMode.py clientId restApiUrl spaId spaIP waterCareModeIdx devicePath`          |
 | Automaische Nachführung der Zieltemperatur | `SpaMoveTargetTemp` (Datei: [SpaMoveTargetTemp.js](JavaScript/SpaMoveTargetTemp.js)) | nicht benötigt                                                                 |
 
 **Hinweis:** Wenn im vorhergehenden Schritt bei BASE_ADAPTER bzw. BASE_FOLDER abweichende Pfade angegeben worden sind, müssen diese in den on()-Aufrufen ebenfalls angepasst werden.
@@ -186,3 +186,4 @@ Diese Skripte werden jede Minute gestartet (Zeile 4 in `SpaUpdateValues.js`) um 
   * [X] `javascript.0.Datenpunkte.SwimSpa.x.Wasserpflege` -> entfällt zugunsten`WasserpflegeSwitch`, den zugehörigen z.B. deutschen Statustext kann ein Widget selbst darstellen (z.B. vis basic - ValueList Text oder eine Combobox)
   * [ ] ...
 * [ ] Statussensor (`javascript.0.Datenpunkte.SwimSpa.x.Sensoren.Status.State`) Funktion herstellen (funktioniert momentant überhaupt nicht bzw. zeigt immer: Connected)
+* [ ] Nutzbarkeit im Docker Container herstellen (durch die besonderen Netzwerksituation geht Discovery nicht und auch die Steuerung)

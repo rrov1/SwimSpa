@@ -5,7 +5,7 @@ createDatapoints(2, 3, true);
 
 
 function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
-    const VERSION = "0.2.5"
+    const VERSION = "0.2.6"
     console.log("*** start: createDatapoints(nDevCnt: " + nDevCnt + ", nPumpCnt: " + nPumpCnt + ", createWaterfall: " + createWaterfall + ") v" + VERSION);
     var objectId, objectData;
 
@@ -172,6 +172,19 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             objectData.common.write = false;
             setObject(objectId, objectData, function (err) {
                 if (err) log('cannot write object: ' + err);
+            });
+        }
+
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".IPAddresse";
+        if (!existsState(objectId)) {
+            createState(objectId, {
+                read: true, 
+                write: true, 
+                name: "IPAddresse", 
+                type: "string", 
+                role: "info.ip",
+                desc: "IP-Adresse des SpaControllers",
+                def: ""
             });
         }
 

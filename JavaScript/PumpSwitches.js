@@ -13,6 +13,9 @@ async function switchPump(obj) {
     // get spa id
     var spaId = getState(getParent(obj.id, 3) + ".ID").val;
     //console.log("*** spaId: " + spaId);
+    //get spa IP
+    var spaIP = getState(getParent(obj.id, 3) + ".IPAddresse").val;
+    //console.log("*** spaIP: " + spaIP);
     // get pump id
     var pumpId = parseInt(obj.channelId.substring(obj.channelId.lastIndexOf(".") + 2));
     pumpId--;
@@ -44,8 +47,8 @@ async function switchPump(obj) {
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
     // spa_switchPump.py clientId restApiUrl spaId pumpId newPumpState pumpChannel
-    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_switchPump.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + pumpId + " " + newState + " " + obj.channelId);
-    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_switchPump.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + pumpId + " " + newState + " " + obj.channelId);
+    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_switchPump.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + pumpId + " " + newState + " " + obj.channelId);
+    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_switchPump.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + pumpId + " " + newState + " " + obj.channelId);
 
     // signal that there is no longer a script is running
     setState(dpBasePath + '.scriptRunning', {val: false, ack: true});

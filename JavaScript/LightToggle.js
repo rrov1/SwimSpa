@@ -14,6 +14,9 @@ async function toggleLight(obj) {
     // get spa id
     var spaId = getState(getParent(obj.id, 3) + ".ID").val;
     //console.log("*** spaId: " + spaId);
+    //get spa IP
+    var spaIP = getState(getParent(obj.id, 3) + ".IPAddresse").val;
+    //console.log("*** spaIP: " + spaIP);
     // get light key
     var lightKey = obj.channelId.substring(obj.channelId.lastIndexOf(".") + 1);
     //console.log("*** light key: " + lightKey);
@@ -43,8 +46,8 @@ async function toggleLight(obj) {
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
     // spa_toggleLight.py clientId spaId lightKey lightChannel
-    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_toggleLight.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + lightKey + " " + obj.channelId);
-    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_toggleLight.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + lightKey + " " + obj.channelId);
+    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_toggleLight.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + lightKey + " " + obj.channelId);
+    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_toggleLight.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + lightKey + " " + obj.channelId);
 
     // signal that there is no longer a script is running
     setState(dpBasePath + '.scriptRunning', {val: false, ack: true});

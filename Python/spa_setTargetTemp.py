@@ -6,13 +6,13 @@ import signal
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.2"
+VERSION = "0.2.3"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
-if len(sys.argv) != 6:
-    print("*** Wrong number of script arguments.")
-    print("*** call example: {sys.argv[0]} clientId restApiUrl spaId targetTemp targetTempDatapoint")
+if len(sys.argv) != 7:
+    print("*** Wrong number of script arguments.", file=sys.stderr)
+    print("*** call example: {sys.argv[0]} clientId restApiUrl spaId spaIP targetTemp targetTempDatapoint", file=sys.stderr)
     quit(-1)
 
 def is_float(element: any) -> bool:
@@ -32,12 +32,14 @@ IOBRURL = sys.argv[2]
 print(f"ioBroker Simple Rest API URL: {IOBRURL}")
 SPA_ID = sys.argv[3]
 print(f"Connecting to spa id {SPA_ID}")
-TARGET_TEMP = sys.argv[4]
+SPA_IP = sys.argv[4]
+print(f"Connecting to spa ip {SPA_IP}")
+TARGET_TEMP = sys.argv[5]
 if (not is_float(TARGET_TEMP)):
     print(f"error: argument {TARGET_TEMP} is not a float")
     quit(-1)
 print(f"New target temp: {TARGET_TEMP}")
-IOBR_TARGET_TEMP_DP = sys.argv[5]
+IOBR_TARGET_TEMP_DP = sys.argv[6]
 print(f"Got datapoint to update: {IOBR_TARGET_TEMP_DP}")
 
 def set_run_timeout(timeout):
@@ -48,8 +50,6 @@ def set_run_timeout(timeout):
     signal.alarm(timeout)
 
 class SampleSpaMan(GeckoAsyncSpaMan):
-    """Sample spa man implementation"""
-
     async def handle_event(self, event: GeckoSpaEvent, **kwargs) -> None:
         # Uncomment this line to see events generated
         # print(f"{event}: {kwargs}")
@@ -58,11 +58,11 @@ class SampleSpaMan(GeckoAsyncSpaMan):
 async def main() -> None:
     set_run_timeout(30)
 
-    async with SampleSpaMan(CLIENT_ID, spa_identifier=SPA_ID) as spaman:
-        print(f"*** connecting to {SPA_ID}")
+    async with SampleSpaMan(CLIENT_ID, spa_identifier=SPA_ID, spa_address=SPA_IP) as spaman:
+        print(f"*** connecting to {SPA_ID} with ip {SPA_IP}")
 
         #connect
-        await spaman.async_connect(spa_identifier=SPA_ID)
+        await spaman.async_connect(spa_identifier=SPA_ID, spa_address=SPA_IP)
 
         # Wait for the facade to be ready
         result = await spaman.wait_for_facade()
@@ -73,7 +73,7 @@ async def main() -> None:
             if spaman.facade.water_heater.is_present:
                 print(f"*** water heater present")
             else:
-                print(f"error: no water heater present returned from geckolib")
+                print(f"error: no water heater present returned from geckolib", file=sys.stderr)
                 quit(-1)
             
             print(f"*** current target temp: {spaman.facade.water_heater.target_temperature}")
@@ -103,11 +103,7 @@ async def main() -> None:
             await spaman.async_reset()
             print("connection closed/reset")
         else:
-            print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}")
-            print(f"status_sensor: {spaman.status_sensor.state}")
-            print(f"radio_sensor: {spaman.radio_sensor.state}")
-            print(f"channel_sensor: {spaman.channel_sensor.state}")
-            print(f"ping_sensor: {spaman.ping_sensor.state}")
+            print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}", file=sys.stderr)
         
         sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
         #print(sJson2Send)
@@ -115,7 +111,7 @@ async def main() -> None:
             oResponse = requests.post("{}/setBulk".format(IOBRURL), data = sJson2Send)
         except Exception as e:
             print(e)
-            print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url")
+            print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url", file=sys.stderr)
         else:
             print(f"http response code: {oResponse.status_code}")
             if oResponse.status_code != 200:

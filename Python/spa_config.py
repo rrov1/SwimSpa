@@ -5,7 +5,7 @@ import requests
 import urllib
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.3"
+VERSION = "0.2.4"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -31,7 +31,7 @@ class SampleSpaMan(GeckoAsyncSpaMan):
 
 
 async def main() -> None:
-    async with SampleSpaMan(CLIENT_ID, spa_address=None) as spaman:
+    async with SampleSpaMan(CLIENT_ID) as spaman:
         print("*** looking for spas on your network ...")
 
         # Wait for descriptors to be available
@@ -70,6 +70,8 @@ async def main() -> None:
             sJson2Send = ""
 
             print(f"spa_state {spaman.spa_state}")
+            print(f"ip address: {spa_descriptor.ipaddress}")
+            sJson2Send = sJson2Send + "{}.{}.IPAddresse={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spa_descriptor.ipaddress)) + "&ack=true& "
 
             # name and id
             print(f"identifier {spaman.facade.name}")
@@ -148,7 +150,7 @@ async def main() -> None:
                 oResponse = requests.post("{}/setBulk".format(IOBRURL), data = sJson2Send)
             except Exception as e:
                 print(e)
-                print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url")
+                print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url", file=sys.stderr)
             else:
                 print(f"http response code: {oResponse.status_code}")
                 if oResponse.status_code != 200:
