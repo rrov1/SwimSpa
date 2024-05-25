@@ -1,19 +1,20 @@
 <!-- TOC -->
 
 - [ioBroker Skript Integration von Gecko Alliance spa pack systems bzw. in.touch2 mit geckolib](#iobroker-skript-integration-von-gecko-alliance-spa-pack-systems-bzw-intouch2-mit-geckolib)
-  - [Funktionsumfang](#funktionsumfang)
-  - [Installation/Update](#installationupdate)
-    - [gazoodle/geckolib (github)](#gazoodlegeckolib-github)
-    - [Python Skripte](#python-skripte)
-    - [Javascript Skripte für ioBroker](#javascript-skripte-für-iobroker)
-      - [Voraussetzungen](#voraussetzungen)
-      - [Schritt 1: Skript SpaGlobal.js bereitstellen](#schritt-1-skript-spaglobaljs-bereitstellen)
-      - [Schritt 2: Erstellen bzw. Aktualisieren der Datenpunkte](#schritt-2-erstellen-bzw-aktualisieren-der-datenpunkte)
-      - [Schritt 3: Skripte für Spa Controller Konfiguration und Update der Zustände](#schritt-3-skripte-für-spa-controller-konfiguration-und-update-der-zustände)
-      - [Schritt 4: Weitere Skripte nach Bedarf](#schritt-4-weitere-skripte-nach-bedarf)
-  - [Fehlerbehandlung](#fehlerbehandlung)
-    - [SpaUpdateValues.js/spa\_updateBulk.py](#spaupdatevaluesjsspa_updatebulkpy)
-  - [Visualisierung](#visualisierung)
+    - [Funktionsumfang](#funktionsumfang)
+    - [Installation/Update](#installationupdate)
+        - [gazoodle/geckolib github](#gazoodlegeckolib-github)
+        - [Python Skripte](#python-skripte)
+        - [Javascript Skripte für ioBroker](#javascript-skripte-f%C3%BCr-iobroker)
+            - [Voraussetzungen](#voraussetzungen)
+            - [Schritt 1: Skript SpaGlobal.js bereitstellen](#schritt-1-skript-spaglobaljs-bereitstellen)
+            - [Schritt 2: Erstellen bzw. Aktualisieren der Datenpunkte](#schritt-2-erstellen-bzw-aktualisieren-der-datenpunkte)
+            - [Schritt 3: Skripte für Spa Controller Konfiguration und Update der Zustände](#schritt-3-skripte-f%C3%BCr-spa-controller-konfiguration-und-update-der-zust%C3%A4nde)
+            - [Schritt 4: Weitere Skripte nach Bedarf](#schritt-4-weitere-skripte-nach-bedarf)
+    - [Fehler und Sonderfälle](#fehler-und-sonderf%C3%A4lle)
+        - [SpaUpdateValues.js/spa_updateBulk.py](#spaupdatevaluesjsspa_updatebulkpy)
+        - [Kein SpaController gefunden, wenn ioBroker im Docker Container läuft](#kein-spacontroller-gefunden-wenn-iobroker-im-docker-container-l%C3%A4uft)
+    - [Visualisierung](#visualisierung)
 - [Todo's](#todos)
 
 <!-- /TOC -->
@@ -157,11 +158,16 @@ Werte die sich häufig ändern werden minütlich von `SpaUpdateValues` aktualisi
 
 **Hinweis:** Wenn im vorhergehenden Schritt bei BASE_ADAPTER bzw. BASE_FOLDER abweichende Pfade angegeben worden sind, müssen diese in den on()-Aufrufen ebenfalls angepasst werden.
 
-## Fehlerbehandlung
+## Fehler und Sonderfälle
 
 ### SpaUpdateValues.js/spa_updateBulk.py
 
 Diese Skripte werden jede Minute gestartet (Zeile 4 in `SpaUpdateValues.js`) um Änderungen von Werten wie z.B. der Wassertemperatur, Pumpenstatus usw. vom SpaController auszulesen. Von den 1.440 Aufrufen pro Tag schlagen bei mir lt. Protokoll: ~50 Aufrufe fehl. Eine Quote so in der Höhe, vielleicht bis zu 200 je Tag, kann als normal betrachtet werden. Das hängt u.a. damit zusammen wie die geckolib mit dem SpaController kommuniziert, dann natürlich das minütliche pollen, vielleicht noch die App die parallel was tut, leider jenseits von perfekt von der Implementierung her :-(.
+
+### Kein SpaController gefunden, wenn ioBroker im Docker Container läuft
+
+Wenn ioBroker in einem Docker Container betrieben wird funktioniert ie automatische Erkennung der SpaController nicht, da dies auf einem Broadcast beruht und der Container in einem separaten Netzsegment läuft. Für diese Fälle gibt es den Datenpunkt: `javascript.0.Datenpunkte.SwimSpa.discoverIP` in dem in diesem Fall die IP-Adresse bzw. eine Komma separierte Liste von IP-Adressen der SpaController hinterlegt werden kann.
+Dieser Datenpunkt kann auch verwendet werden, wenn sich die SpaController in einem nicht per Broadcast erreichbaren Netzwerksegment befinden. 
 
 ## Visualisierung
 
@@ -186,4 +192,4 @@ Diese Skripte werden jede Minute gestartet (Zeile 4 in `SpaUpdateValues.js`) um 
   * [X] `javascript.0.Datenpunkte.SwimSpa.x.Wasserpflege` -> entfällt zugunsten`WasserpflegeSwitch`, den zugehörigen z.B. deutschen Statustext kann ein Widget selbst darstellen (z.B. vis basic - ValueList Text oder eine Combobox)
   * [ ] ...
 * [ ] Statussensor (`javascript.0.Datenpunkte.SwimSpa.x.Sensoren.Status.State`) Funktion herstellen (funktioniert momentant überhaupt nicht bzw. zeigt immer: Connected)
-* [ ] Nutzbarkeit im Docker Container herstellen (durch die besonderen Netzwerksituation geht Discovery nicht und auch die Steuerung)
+* [X] Nutzbarkeit im Docker Container herstellen (durch die besonderen Netzwerksituation geht Discovery nicht und auch die Steuerung)
