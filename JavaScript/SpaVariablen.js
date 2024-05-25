@@ -5,7 +5,7 @@ createDatapoints(2, 3, true);
 
 
 function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
-    const VERSION = "0.2.6"
+    const VERSION = "0.2.7"
     console.log("*** start: createDatapoints(nDevCnt: " + nDevCnt + ", nPumpCnt: " + nPumpCnt + ", createWaterfall: " + createWaterfall + ") v" + VERSION);
     var objectId, objectData;
 
@@ -127,6 +127,19 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             console.log("*** leaving guid unchanged");
         }
     });
+
+    objectId = BASE_ADAPTER + "." + BASE_FOLDER + ".discoverIP";
+    if (!existsState(objectId)) {
+        createState(objectId, {
+            read: true, 
+            write: true, 
+            name: "discoverIP",
+            type: "string", 
+            role: "state",
+            desc: "Komma getrennte Liste der IP-Adressen der SpaController, wird benötigt beim Betrieb von ioBroker in einem Docker Container oder wenn der SpaController in einem anderen Subnetz liegt.",
+            def: ""
+        });
+    }
 
     // Variablen pro SpaController
     for (let nCurDev = 0; nCurDev < nDevCnt; nCurDev++) {

@@ -18,6 +18,11 @@ async function updateSpaConfig() {
         pyScriptFolder += "/";
     }
     //console.log("*** pyScriptFolder: " + pyScriptFolder);
+    var discoverIPs = getState(dpBasePath + ".discoverIP").val;
+    if (discoverIPs != "") {
+        discoverIPs = discoverIPs.split(",");
+        console.log("*** IP(s) to disover: " + discoverIPs);
+    }
     
     // reset if script runs longer than 5 minutes
     var diff = new Date(new Date() - new Date(getState(dpBasePath + ".scriptRunning").ts));
@@ -38,9 +43,21 @@ async function updateSpaConfig() {
     // signal that a script is running
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
-    // spa_config.py clientId restApiUrl dpBasePath
-    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath);
-    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath);
+    // discover SpaControler
+    if (discoverIPs != "") {
+        // by given IP
+        for (let i = 0; i < discoverIPs.length; i++) {
+            console.log("*** discovering IP: " + i + " => " + discoverIPs[i]);
+            // spa_config.py clientId restApiUrl dpBasePath spaNum spaIP
+            console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath + " " + i + " " + discoverIPs[i]);
+            await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath + " " + i + " " + discoverIPs[i]);
+        }
+    } else {
+        // by broadcast 
+        // spa_config.py clientId restApiUrl dpBasePath
+        console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath);
+        await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath);
+    }
 
     // signal that there is no longer a script is running
     setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
