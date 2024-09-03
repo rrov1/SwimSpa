@@ -166,7 +166,7 @@ Diese Skripte werden jede Minute gestartet (Zeile 4 in `SpaUpdateValues.js`) um 
 
 ### Kein SpaController gefunden, wenn ioBroker im Docker Container läuft
 
-Wenn ioBroker in einem Docker Container betrieben wird funktioniert ie automatische Erkennung der SpaController nicht, da dies auf einem Broadcast beruht und der Container in einem separaten Netzsegment läuft. Für diese Fälle gibt es den Datenpunkt: `javascript.0.Datenpunkte.SwimSpa.discoverIP` in dem in diesem Fall die IP-Adresse bzw. eine Komma separierte Liste von IP-Adressen der SpaController hinterlegt werden kann.
+Wenn ioBroker in einem Docker Container betrieben wird funktioniert die automatische Erkennung der SpaController nicht, da diese auf einem Broadcast beruht und der Container in einem separaten Netzsegment läuft. Für diese Fälle gibt es den Datenpunkt: `javascript.0.Datenpunkte.SwimSpa.discoverIP` in dem in diesem Fall die IP-Adresse bzw. eine Komma separierte Liste von IP-Adressen der SpaController hinterlegt werden kann.
 Dieser Datenpunkt kann auch verwendet werden, wenn sich die SpaController in einem nicht per Broadcast erreichbaren Netzwerksegment befinden. 
 
 ## Visualisierung
