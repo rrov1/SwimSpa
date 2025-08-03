@@ -44,7 +44,7 @@ Hier auf Github werden 2 Arten von Skripten bereitgestellt:
 
 Quelle: [https://github.com/gazoodle/geckolib](https://github.com/gazoodle/geckolib)
 
-Voraussetzung zur Installation: **Python3 mind. v3.13** & **Pip** (am besten unter einem Linux, nur Versionen die unter [Support](https://devguide.python.org/versions/) sind)
+Voraussetzung zur Installation: **Python3 mind. v3.13** & **Pip** (am besten unter einem Linux, nur Versionen die unter [Support](https://devguide.python.org/versions/) sind)<br>
 **Wichtig:** Die geckolib ab v1.0.0 benötigt Python 3.13 (Abhängigkeit). Unbedingt prüfen, denn diese Version enthält Änderungen die nicht mit vorherigen Versionen kompatibel sind. Diese Scripte unterstützen **nur** noch geckolib ab v1.0.0 und damit muss Python 3.13 installiert sein.
 
 Installation: `sudo pip install geckolib`<br>
