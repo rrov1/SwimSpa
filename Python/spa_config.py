@@ -5,7 +5,7 @@ import requests
 import urllib
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.5"
+VERSION = "0.3.0"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -109,7 +109,7 @@ async def main() -> None:
             sJson2Send = sJson2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, ioBrDeviceNum, urllib.parse.quote(spaman.status_sensor.state)) + "&ack=true& "
             
             #
-            print(f'Heizung vorhanden {spaman.facade.water_heater.is_present}')
+            print(f'Heizung vorhanden {spaman.facade.water_heater.is_available}')
             print(f'Temperatureinheit {spaman.facade.water_heater.temperature_unit}')
             sJson2Send = sJson2Send + "{}.{}.Temperatureinheit={}".format(IOB_DP_BASE_PATH, ioBrDeviceNum, urllib.parse.quote(spaman.facade.water_heater.temperature_unit)) + "&ack=true& "
             #

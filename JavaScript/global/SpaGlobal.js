@@ -9,7 +9,7 @@ function execPythonAsync(command) {
         exec(command, function (error, stdout, stderr) {
             //console.log('*** stdout: ' + stdout);
             if (error !== null) {
-                console.log('*** stderr: ' + error);
+                console.error('*** stderr: ' + error);
             }
             resolve();
         });

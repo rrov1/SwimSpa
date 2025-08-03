@@ -14,7 +14,7 @@ dictEn2De = {'Away From Home': 'Abwesend',
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.5"
+VERSION = "0.3.0"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -79,7 +79,7 @@ async def main() -> None:
 
         # get current watercare mode
         # currentWatercareMode = spaman.facade.water_care.active_mode
-        currentWatercareMode = await spaman.facade.spa.async_get_watercare()
+        currentWatercareMode = await spaman.facade.spa.async_get_watercare_mode()
         print(f"current watercare mode: {currentWatercareMode}")
         
         print(f"*** connect result-> {result}")

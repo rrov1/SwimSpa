@@ -6,7 +6,7 @@ import signal
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.3"
+VERSION = "0.3.0"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -70,10 +70,10 @@ async def main() -> None:
         print(f"*** connect result-> {result}")
         sJson2Send = ""
         if result == True:
-            if spaman.facade.water_heater.is_present:
-                print(f"*** water heater present")
+            if spaman.facade.water_heater.is_available:
+                print(f"*** water heater available")
             else:
-                print(f"error: no water heater present returned from geckolib", file=sys.stderr)
+                print(f"error: no water heater available returned from geckolib", file=sys.stderr)
                 quit(-1)
             
             print(f"*** current target temp: {spaman.facade.water_heater.target_temperature}")

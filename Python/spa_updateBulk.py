@@ -8,7 +8,7 @@ import json
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.7"
+VERSION = "0.3.0"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -149,7 +149,7 @@ async def main() -> None:
                         print(f"{stateRow}: {currentStates[stateRow]['id']}, val: {currentStates[stateRow]['val']}, type: {type(currentStates[stateRow])}")
 
                 print("sending heater ops")
-                print(f'heater present-> {facade.water_heater.is_present}')
+                print(f'heater available-> {facade.water_heater.is_available}')
                 print(f"current heater operation-> {facade.water_heater.current_operation}")
                 ioBrDp = "{}.{}.Heizer".format(IOB_DP_BASE_PATH, nSpaNum)
                 currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
@@ -184,7 +184,7 @@ async def main() -> None:
                 
                 # Wasserprflege
                 print('sending water care')
-                myMode = await facade.spa.async_get_watercare()
+                myMode = await facade.spa.async_get_watercare_mode()
                 print(f"current watercare mode: {myMode}")
                 ioBrDp = "{}.{}.WasserpflegeSwitch".format(IOB_DP_BASE_PATH, nSpaNum)
                 currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)

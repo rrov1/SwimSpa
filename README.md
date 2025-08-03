@@ -1,20 +1,20 @@
 <!-- TOC -->
 
 - [ioBroker Skript Integration von Gecko Alliance spa pack systems bzw. in.touch2 mit geckolib](#iobroker-skript-integration-von-gecko-alliance-spa-pack-systems-bzw-intouch2-mit-geckolib)
-    - [Funktionsumfang](#funktionsumfang)
-    - [Installation/Update](#installationupdate)
-        - [gazoodle/geckolib github](#gazoodlegeckolib-github)
-        - [Python Skripte](#python-skripte)
-        - [Javascript Skripte für ioBroker](#javascript-skripte-f%C3%BCr-iobroker)
-            - [Voraussetzungen](#voraussetzungen)
-            - [Schritt 1: Skript SpaGlobal.js bereitstellen](#schritt-1-skript-spaglobaljs-bereitstellen)
-            - [Schritt 2: Erstellen bzw. Aktualisieren der Datenpunkte](#schritt-2-erstellen-bzw-aktualisieren-der-datenpunkte)
-            - [Schritt 3: Skripte für Spa Controller Konfiguration und Update der Zustände](#schritt-3-skripte-f%C3%BCr-spa-controller-konfiguration-und-update-der-zust%C3%A4nde)
-            - [Schritt 4: Weitere Skripte nach Bedarf](#schritt-4-weitere-skripte-nach-bedarf)
-    - [Fehler und Sonderfälle](#fehler-und-sonderf%C3%A4lle)
-        - [SpaUpdateValues.js/spa_updateBulk.py](#spaupdatevaluesjsspa_updatebulkpy)
-        - [Kein SpaController gefunden, wenn ioBroker im Docker Container läuft](#kein-spacontroller-gefunden-wenn-iobroker-im-docker-container-l%C3%A4uft)
-    - [Visualisierung](#visualisierung)
+  - [Funktionsumfang](#funktionsumfang)
+  - [Installation/Update](#installationupdate)
+    - [gazoodle/geckolib (github)](#gazoodlegeckolib-github)
+    - [Python Skripte](#python-skripte)
+    - [Javascript Skripte für ioBroker](#javascript-skripte-für-iobroker)
+      - [Voraussetzungen](#voraussetzungen)
+      - [Schritt 1: Skript SpaGlobal.js bereitstellen](#schritt-1-skript-spaglobaljs-bereitstellen)
+      - [Schritt 2: Erstellen bzw. Aktualisieren der Datenpunkte](#schritt-2-erstellen-bzw-aktualisieren-der-datenpunkte)
+      - [Schritt 3: Skripte für Spa Controller Konfiguration und Update der Zustände](#schritt-3-skripte-für-spa-controller-konfiguration-und-update-der-zustände)
+      - [Schritt 4: Weitere Skripte nach Bedarf](#schritt-4-weitere-skripte-nach-bedarf)
+  - [Fehler und Sonderfälle](#fehler-und-sonderfälle)
+    - [SpaUpdateValues.js/spa\_updateBulk.py](#spaupdatevaluesjsspa_updatebulkpy)
+    - [Kein SpaController gefunden, wenn ioBroker im Docker Container läuft](#kein-spacontroller-gefunden-wenn-iobroker-im-docker-container-läuft)
+  - [Visualisierung](#visualisierung)
 - [Todo's](#todos)
 
 <!-- /TOC -->
@@ -44,7 +44,8 @@ Hier auf Github werden 2 Arten von Skripten bereitgestellt:
 
 Quelle: [https://github.com/gazoodle/geckolib](https://github.com/gazoodle/geckolib)
 
-Voraussetzung zur Installation: **Python3 mind. v3.8** & **Pip** (am besten unter einem Linux, nur Versionen die unter [Support](https://devguide.python.org/versions/) sind)
+Voraussetzung zur Installation: **Python3 mind. v3.13** & **Pip** (am besten unter einem Linux, nur Versionen die unter [Support](https://devguide.python.org/versions/) sind)
+**Wichtig:** Die geckolib ab v1.0.0 benötigt Python 3.13 (Abhängigkeit). Unbedingt prüfen, denn diese Version enthält Änderungen die nicht mit vorherigen Versionen kompatibel sind. Diese Scripte unterstützen **nur** noch geckolib ab v1.0.0 und damit muss Python 3.13 installiert sein.
 
 Installation: `sudo pip install geckolib`<br>
 Update: `sudo pip install geckolib --upgrade`<br>
