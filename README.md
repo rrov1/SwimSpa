@@ -1,27 +1,26 @@
-<!-- TOC -->
+<!-- TOC depthfrom:2 -->
 
-- [ioBroker Skript Integration von Gecko Alliance spa pack systems bzw. in.touch2 mit geckolib](#iobroker-skript-integration-von-gecko-alliance-spa-pack-systems-bzw-intouch2-mit-geckolib)
-  - [Funktionsumfang](#funktionsumfang)
-  - [Installation/Update](#installationupdate)
-    - [gazoodle/geckolib (github)](#gazoodlegeckolib-github)
-    - [Python Skripte](#python-skripte)
-    - [Javascript Skripte für ioBroker](#javascript-skripte-für-iobroker)
-      - [Voraussetzungen](#voraussetzungen)
-      - [Schritt 1: Skript SpaGlobal.js bereitstellen](#schritt-1-skript-spaglobaljs-bereitstellen)
-      - [Schritt 2: Erstellen bzw. Aktualisieren der Datenpunkte](#schritt-2-erstellen-bzw-aktualisieren-der-datenpunkte)
-      - [Schritt 3: Skripte für Spa Controller Konfiguration und Update der Zustände](#schritt-3-skripte-für-spa-controller-konfiguration-und-update-der-zustände)
-      - [Schritt 4: Weitere Skripte nach Bedarf](#schritt-4-weitere-skripte-nach-bedarf)
-  - [Fehler und Sonderfälle](#fehler-und-sonderfälle)
-    - [SpaUpdateValues.js/spa\_updateBulk.py](#spaupdatevaluesjsspa_updatebulkpy)
-    - [Kein SpaController gefunden, wenn ioBroker im Docker Container läuft](#kein-spacontroller-gefunden-wenn-iobroker-im-docker-container-läuft)
-  - [Visualisierung](#visualisierung)
-- [Todo's](#todos)
+- [1. Funktionsumfang](#1-funktionsumfang)
+- [2. Installation/Update](#2-installationupdate)
+    - [2.1. gazoodle/geckolib github](#21-gazoodlegeckolib-github)
+    - [2.2. Python Skripte](#22-python-skripte)
+    - [2.3. Javascript Skripte für ioBroker](#23-javascript-skripte-f%C3%BCr-iobroker)
+        - [2.3.1. Voraussetzungen](#231-voraussetzungen)
+        - [2.3.2. Schritt 1: Skript SpaGlobal.js bereitstellen](#232-schritt-1-skript-spaglobaljs-bereitstellen)
+        - [2.3.3. Schritt 2: Erstellen bzw. Aktualisieren der Datenpunkte](#233-schritt-2-erstellen-bzw-aktualisieren-der-datenpunkte)
+        - [2.3.4. Schritt 3: Skripte für Spa Controller Konfiguration und Update der Zustände](#234-schritt-3-skripte-f%C3%BCr-spa-controller-konfiguration-und-update-der-zust%C3%A4nde)
+        - [2.3.5. Schritt 4: Weitere Skripte nach Bedarf](#235-schritt-4-weitere-skripte-nach-bedarf)
+- [3. Fehler und Sonderfälle](#3-fehler-und-sonderf%C3%A4lle)
+    - [3.1. SpaUpdateValues.js/spa_updateBulk.py](#31-spaupdatevaluesjsspa_updatebulkpy)
+    - [3.2. Kein SpaController gefunden, wenn ioBroker im Docker Container läuft](#32-kein-spacontroller-gefunden-wenn-iobroker-im-docker-container-l%C3%A4uft)
+    - [3.3. SpaController Überwachung/Steuerung temporär deaktivieren](#33-spacontroller-%C3%BCberwachungsteuerung-tempor%C3%A4r-deaktivieren)
+- [4. Visualisierung](#4-visualisierung)
 
 <!-- /TOC -->
 
 # ioBroker Skript Integration von Gecko Alliance spa pack systems bzw. in.touch2 mit geckolib
 
-## Funktionsumfang
+## 1. Funktionsumfang
 
 * [X] Unterstützung mehrere Spa Controller
 * [X] Bereitstellen von Datenpunkten mit der Konfiguration des Spa Controllers
@@ -33,14 +32,14 @@
 * [X] Erinnerungen
 * [ ] ToDos unten umsetzen
 
-## Installation/Update
+## 2. Installation/Update
 
 Hier auf Github werden 2 Arten von Skripten bereitgestellt:
 
 1. Python-Skripte im Ordner: [Pyhton](Python), über die das geckolib API angesprochen wird
 2. Javascript-Skripte im Ordner: [Javascript](JavaScript), welche im Javascript Adapter angelegt werden müssen
 
-### gazoodle/geckolib (github)
+### 2.1. gazoodle/geckolib (github)
 
 Quelle: [https://github.com/gazoodle/geckolib](https://github.com/gazoodle/geckolib)
 
@@ -52,7 +51,7 @@ Update: `sudo pip install geckolib --upgrade`<br>
 
 Auch die geckolib muss ab und an mal aktualisiert werden.
 
-### Python Skripte
+### 2.2. Python Skripte
 
 Für die Python-Skripte sind noch folgende Bibliotheken bereitzustellen:
 
@@ -88,9 +87,9 @@ Die Python-Skripte werden von den Javascript-Skripten aus aufgerufen mit den nö
 
 **Wichtig:** ioBroker benötigt Zugriff auf die Python-Skripte, der Ablageort kann z.B. auch `/opt/iobroker/node_modules/iobroker.javascript` sein, das könnte allerdings mal Probleme mit Adapter oder ioBroker Updates geben.
 
-### Javascript Skripte für ioBroker
+### 2.3. Javascript Skripte für ioBroker
 
-#### Voraussetzungen
+#### 2.3.1. Voraussetzungen
 
 * Adapter: "Simple RESTful API" installiert und eine konfigurierte Instanz am laufen (bitte prüfen, dass die IP in der Instanzkonfiguration passend eingestellt ist, getestet sind die Skripte mit IPv4, egal ob 0.0.0.0 oder die IP des Netzwerkadapters)
 * Adapter: Javascript/Blockly installiert und eine Instanz am laufen
@@ -98,7 +97,7 @@ Die Python-Skripte werden von den Javascript-Skripten aus aufgerufen mit den nö
   * Option: Enable Command "setObject" - ist aktiviert
   * Option: Enable Command "exec" - ist aktiviert
 
-#### Schritt 1: Skript SpaGlobal.js bereitstellen
+#### 2.3.2. Schritt 1: Skript SpaGlobal.js bereitstellen
 
 * "Expert Mode" im Adapter aktivieren, damit der Ordner `global` angezeigt wird
 * im Ordner `global` ein neues Skript `SpaGlobal` anlegen und den Inhalt der Datei [SpaGlobal.js](JavaScript/global/SpaGlobal.js) hineinkopieren und evtl. Konfiguration anpassen:
@@ -111,7 +110,7 @@ Die Python-Skripte werden von den Javascript-Skripten aus aufgerufen mit den nö
 | `SPA_EXECUTEABLE`   | Auszuführendes Programm, Standard ist "python3"                                                                             |
 | `PY_SCRIPTS_FOLDER` | Verzeichnis in dem sich die Python-Skripte befinden. Standard ist`/SpaController` damit das mit der Anleitung zusammenpasst. |
 
-#### Schritt 2: Erstellen bzw. Aktualisieren der Datenpunkte
+#### 2.3.3. Schritt 2: Erstellen bzw. Aktualisieren der Datenpunkte
 
 * Neuen Ordner `Spa` im Javascript Adapter anlegen um alle folgenden Skripte an einen Ort zu abzulegen
 * Neues Skript `SpaVariablen` in diesem Ordner anlegen und den Inahlt von [SpaVariablen.js](JavaScript/SpaVariablen.js) einspielen
@@ -128,7 +127,7 @@ Die Python-Skripte werden von den Javascript-Skripten aus aufgerufen mit den nö
 * Prüfen ob die Datenpunkte vorhanden sind, der Objektbau sollte so aussehen:
   ![Datenpunkte im Objektbaum](doc/img/Datenpunkte_im_Objektbaum.png)
 
-#### Schritt 3: Skripte für Spa Controller Konfiguration und Update der Zustände
+#### 2.3.4. Schritt 3: Skripte für Spa Controller Konfiguration und Update der Zustände
 
 Konfigurationswerte, die sich seltener ändern werden alle 6h von `SpaUpdateConfig` aktualisiert:
 
@@ -143,7 +142,7 @@ Werte die sich häufig ändern werden minütlich von `SpaUpdateValues` aktualisi
 * Das Skript wird minütlich aufgerufen und aktualisiert alle anderen Werte wie z.B. die Wassertemperaturen, Pumpenstatus, Licht usw.
 * Jetzt überprüfen, on die Wassertemperatur aktualisiert wurde
 
-#### Schritt 4: Weitere Skripte nach Bedarf
+#### 2.3.5. Schritt 4: Weitere Skripte nach Bedarf
 
 * Falls nicht vorhanden einen neuen Ordner `Spa` im JavaScript-Adapter anlegen (um die Skripte etwas zu sortieren)
 * Skripte bereitstellen:
@@ -159,18 +158,24 @@ Werte die sich häufig ändern werden minütlich von `SpaUpdateValues` aktualisi
 
 **Hinweis:** Wenn im vorhergehenden Schritt bei BASE_ADAPTER bzw. BASE_FOLDER abweichende Pfade angegeben worden sind, müssen diese in den on()-Aufrufen ebenfalls angepasst werden.
 
-## Fehler und Sonderfälle
+## 3. Fehler und Sonderfälle
 
-### SpaUpdateValues.js/spa_updateBulk.py
+### 3.1. SpaUpdateValues.js/spa_updateBulk.py
 
 Diese Skripte werden jede Minute gestartet (Zeile 4 in `SpaUpdateValues.js`) um Änderungen von Werten wie z.B. der Wassertemperatur, Pumpenstatus usw. vom SpaController auszulesen. Von den 1.440 Aufrufen pro Tag schlagen bei mir lt. Protokoll: ~50 Aufrufe fehl. Eine Quote so in der Höhe, vielleicht bis zu 200 je Tag, kann als normal betrachtet werden. Das hängt u.a. damit zusammen wie die geckolib mit dem SpaController kommuniziert, dann natürlich das minütliche pollen, vielleicht noch die App die parallel was tut, leider jenseits von perfekt von der Implementierung her :-(.
 
-### Kein SpaController gefunden, wenn ioBroker im Docker Container läuft
+### 3.2. Kein SpaController gefunden, wenn ioBroker im Docker Container läuft
 
 Wenn ioBroker in einem Docker Container betrieben wird funktioniert die automatische Erkennung der SpaController nicht, da diese auf einem Broadcast beruht und der Container in einem separaten Netzsegment läuft. Für diese Fälle gibt es den Datenpunkt: `javascript.0.Datenpunkte.SwimSpa.discoverIP` in dem in diesem Fall die IP-Adresse bzw. eine Komma separierte Liste von IP-Adressen der SpaController hinterlegt werden kann.
-Dieser Datenpunkt kann auch verwendet werden, wenn sich die SpaController in einem nicht per Broadcast erreichbaren Netzwerksegment befinden. 
+Dieser Datenpunkt kann auch verwendet werden, wenn sich die SpaController in einem nicht per Broadcast erreichbaren Netzwerksegment befinden.
 
-## Visualisierung
+### 3.3. SpaController Überwachung/Steuerung temporär deaktivieren
+
+Manchmal ist es notwendig einen SpaController temporär aus der Überwachung bzw. Steuerung durch die Skripte auszulassen. Um nicht alle Skripte manuell zu deaktivieren gibt es einen Datenpunkt: `javascript.0.Datenpunkte.SwimSpa.x.ControllerEnabled` pro SpaController. Dieser ist stnadardmäßig auf `true` und kann bei Bedarf auf `false`gesetzt werden.
+
+**Hinweis:** Zusätzlich sollte noch die Steuerung in der Visualisierung deaktiviert werden.
+
+## 4. Visualisierung
 
 [Hier](doc/visualization.md) mal ein Beispiel für eine Visualisierung mit vis im ioBroker.
 

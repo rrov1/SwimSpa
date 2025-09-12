@@ -17,6 +17,13 @@ async function toggleLight(obj) {
     //get spa IP
     var spaIP = getState(getParent(obj.id, 3) + ".IPAddresse").val;
     //console.log("*** spaIP: " + spaIP);
+
+    // check if controller is enabled
+    if (getState(getParent(obj.id, 3) + ".ControllerEnabled").val == false) {
+        console.log("unable to execute: controller " + spaId + " is disabled.");
+        return;
+    }
+
     // get light key
     var lightKey = obj.channelId.substring(obj.channelId.lastIndexOf(".") + 1);
     //console.log("*** light key: " + lightKey);

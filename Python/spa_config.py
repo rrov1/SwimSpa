@@ -5,7 +5,7 @@ import requests
 import urllib
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -94,7 +94,7 @@ async def main() -> None:
             print(f"uid: {spaman.facade.unique_id}")
             sJson2Send = sJson2Send + "{}.{}.U_ID={}".format(IOB_DP_BASE_PATH, ioBrDeviceNum, urllib.parse.quote(spaman.facade.unique_id)) + "&ack=true& "
             
-            # some sensors
+            # other sensors
             print(f"radio_sensor: {spaman.radio_sensor}")
             sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Signal.Name={}".format(IOB_DP_BASE_PATH, ioBrDeviceNum, urllib.parse.quote(spaman.radio_sensor.name)) + "&ack=true& "
             sJson2Send = sJson2Send + "{}.{}.Sensoren.RF_Signal.State={}".format(IOB_DP_BASE_PATH, ioBrDeviceNum, urllib.parse.quote(str(spaman.radio_sensor.state))) + "&ack=true& "
@@ -128,7 +128,7 @@ async def main() -> None:
             print(f"anzahl lichter: {len(spaman.facade.lights)}")
             for light in spaman.facade.lights:
                 print(f"light key {light.key}, name {light.name}")
-                sJson2Send = sJson2Send + "{}.{}.Lichter.{}.Name'={}".format(IOB_DP_BASE_PATH, ioBrDeviceNum, light.key, urllib.parse.quote(light.name)) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.{}.Lichter.{}.Name={}".format(IOB_DP_BASE_PATH, ioBrDeviceNum, light.key, urllib.parse.quote(light.name)) + "&ack=true& "
             #
             print(f"***anzahl Sensoren: {len(spaman.facade.sensors)}")
             for sensor in spaman.facade.sensors:
@@ -147,10 +147,10 @@ async def main() -> None:
                 sJson2Send = sJson2Send + "{}.{}.Sensoren.{}.Name={}".format(IOB_DP_BASE_PATH, ioBrDeviceNum, sKey, urllib.parse.quote(binary_sensor.name)) + "&ack=true& "
             
             rm = spaman.facade.reminders_manager
-            print(f"anzahl reminders: {len(rm.reminders)}")
+            print(f"anzahl reminders erster Versuch: {len(rm.reminders)}")
             # fixe Wartezeit, ansonsten sind keine Werte verfügbar
             await asyncio.sleep(4)
-            print(f"anzahl reminders: {len(rm.reminders)}")
+            print(f"anzahl reminders nach Wartezeit: {len(rm.reminders)}")
             for reminder in rm.reminders:
                 #print(f"reminder: {reminder.description} - {str(reminder.days)}")
                 sJson2Send = sJson2Send + "{}.{}.Erinnerungen.{}={}".format(IOB_DP_BASE_PATH, ioBrDeviceNum, reminder.description, urllib.parse.quote(str(reminder.days))) + "&ack=true& "

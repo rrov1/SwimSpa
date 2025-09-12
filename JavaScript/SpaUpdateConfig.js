@@ -13,6 +13,14 @@ async function updateSpaConfig() {
     // get client id
     var clientId = await getState(dpBasePath + ".ClientGUID").val;
     //console.log("*** clientId: " + clientId);
+    // check if there is a disabled spacontroller
+    var controllerDisabled = false;
+    $('state[id=' + BASE_ADAPTER + "." + BASE_FOLDER + '*.ControllerEnabled]').each(function(id, i) {
+        if (getState(id).val == false) {
+            controllerDisabled = true;
+        }
+    });
+
     var pyScriptFolder = PY_SCRIPTS_FOLDER;
     if (!pyScriptFolder.endsWith("/")) {
         pyScriptFolder += "/";
@@ -43,20 +51,45 @@ async function updateSpaConfig() {
     // signal that a script is running
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
-    // discover SpaControler
-    if (discoverIPs != "") {
-        // by given IP
-        for (let i = 0; i < discoverIPs.length; i++) {
-            console.log("*** discovering IP: " + i + " => " + discoverIPs[i]);
-            // spa_config.py clientId restApiUrl dpBasePath spaNum spaIP
-            console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath + " " + i + " " + discoverIPs[i]);
-            await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath + " " + i + " " + discoverIPs[i]);
+    if (controllerDisabled) {
+        console.log("found a disabled controller, executing only selectivly configuration updates for enabled controllers, initial discovery not possible");
+        var controller2Check = [];
+        $('state[id=' + BASE_ADAPTER + "." + BASE_FOLDER + '*.IPAddresse]').each(function(id, i) {
+            var spaIP = "";
+            spaIP = getState(id).val;
+            if (spaIP != "") {
+                if (getState(id.replace(".IPAddresse", ".ControllerEnabled")).val == true) {
+                    controller2Check[i] = spaIP;
+                } else {
+                    controller2Check[i] = "";
+                }
+            }
+        });
+        for (let i = 0; i < controller2Check.length; i++) {
+            if (controller2Check[i] != "") {
+                console.log("doing config update for: " + i + ", " + controller2Check[i]);
+                // spa_config.py clientId restApiUrl dpBasePath index ipaddress
+                console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath + " " + i + " " + controller2Check[i]);
+                await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath + " " + i + " " + controller2Check[i]);
+            }
         }
     } else {
-        // by broadcast 
-        // spa_config.py clientId restApiUrl dpBasePath
-        console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath);
-        await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath);
+        console.log("no disabled controller, doing standard discovery")
+        // discover SpaController
+        if (discoverIPs != "") {
+            // by given IP
+            for (let i = 0; i < discoverIPs.length; i++) {
+                console.log("*** discovering IP: " + i + " => " + discoverIPs[i]);
+                // spa_config.py clientId restApiUrl dpBasePath spaNum spaIP
+                console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath + " " + i + " " + discoverIPs[i]);
+                await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath + " " + i + " " + discoverIPs[i]);
+            }
+        } else {
+            // by broadcast 
+            // spa_config.py clientId restApiUrl dpBasePath
+            console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath);
+            await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath);
+        }
     }
 
     // signal that there is no longer a script is running

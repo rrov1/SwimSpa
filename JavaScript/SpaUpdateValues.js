@@ -15,7 +15,11 @@ async function updateSpaValues() {
     var spaIdList = "", spaIPList = "";
     $('state[id=' + BASE_ADAPTER + "." + BASE_FOLDER + '*.ID]').each(function(id, i) {
         spaIdList = spaIdList + getState(id).val + ",";
-        spaIPList = spaIPList + getState(id.replace(".ID", ".IPAddresse")).val + ",";
+        if (getState(id.replace(".ID", ".ControllerEnabled")).val == true) {
+            spaIPList = spaIPList + getState(id.replace(".ID", ".IPAddresse")).val + ",";
+        } else {
+            spaIPList = spaIPList + "0.0.0.0" + ",";
+        }
     });
     if (spaIdList.endsWith(",")) {
         spaIdList = spaIdList.substring(0, spaIdList.length - 1);
@@ -25,6 +29,7 @@ async function updateSpaValues() {
     }
     //console.log("*** spaIdList: " + spaIdList);
     //console.log("*** spaIPList: " + spaIPList);
+    
     var pyScriptFolder = PY_SCRIPTS_FOLDER;
     if (!pyScriptFolder.endsWith("/")) {
         pyScriptFolder += "/";

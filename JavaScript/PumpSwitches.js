@@ -16,6 +16,13 @@ async function switchPump(obj) {
     //get spa IP
     var spaIP = getState(getParent(obj.id, 3) + ".IPAddresse").val;
     //console.log("*** spaIP: " + spaIP);
+
+    // check if controller is enabled
+    if (getState(getParent(obj.id, 3) + ".ControllerEnabled").val == false) {
+        console.log("unable to execute: controller " + spaId + " is disabled.");
+        return;
+    }
+    
     // get pump id
     var pumpId = parseInt(obj.channelId.substring(obj.channelId.lastIndexOf(".") + 2));
     pumpId--;

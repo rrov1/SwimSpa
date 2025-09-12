@@ -5,7 +5,7 @@ createDatapoints(2, 3, true);
 
 
 function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
-    const VERSION = "0.2.7"
+    const VERSION = "0.2.8"
     console.log("*** start: createDatapoints(nDevCnt: " + nDevCnt + ", nPumpCnt: " + nPumpCnt + ", createWaterfall: " + createWaterfall + ") v" + VERSION);
     var objectId, objectData;
 
@@ -140,7 +140,7 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             def: ""
         });
     }
-
+    
     // Variablen pro SpaController
     for (let nCurDev = 0; nCurDev < nDevCnt; nCurDev++) {
         setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev, {
@@ -383,12 +383,27 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
                 if (err) log('cannot write object: ' + err);
             });
         }
+
+        objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".ControllerEnabled";
+        if (!existsState(objectId)) {
+            createState(objectId, {
+                read: true, 
+                write: true, 
+                name: "ControllerEnabled",
+                type: "boolean", 
+                role: "switch.enable",
+                desc: "Controller aktiv und durch Skripte überwacht und steuerbar.",
+                def: true
+            });
+        }
         
         // Pumpen
         setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Pumpen", {
             "type" : "folder",
             "common" : {"name": "Pumpen"}
         });
+
+        // Pumpen anlegen
         for (let nCurPump = 1; nCurPump < nPumpCnt+1; nCurPump++) {
             setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Pumpen.P" + nCurPump, {
                 "type" : "channel",
@@ -664,7 +679,7 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         }
 
         // Sensoren: String
-        sSensors = ["CIRCULATING PUMP", "OZONE", "Last Ping", "Status", "SMART WINTER MODE:RISK"];
+        sSensors = ["CIRCULATING PUMP", "OZONE", "Last Ping", "Status", "SMART WINTER MODE:RISK", "HEATING", "PUMP 1 STATE", "PUMP 2 STATE", "PUMP 3 STATE", "WATERFALL STATE"];
         for (let i = 0; i < sSensors.length; i++) {
             setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_"), {
                 "type" : "channel",

@@ -16,6 +16,13 @@ async function setTargetTemp(obj) {
     //get spa IP
     var spaIP = getState(getParent(obj.id, 1) + ".IPAddresse").val;
     //console.log("*** spaIP: " + spaIP);
+
+    // check if controller is enabled
+    if (getState(getParent(obj.id, 1) + ".ControllerEnabled").val == false) {
+        console.log("unable to execute: controller " + spaId + " is disabled.");
+        return;
+    }
+    
     var pyScriptFolder = PY_SCRIPTS_FOLDER;
     if (!pyScriptFolder.endsWith("/")) {
         pyScriptFolder += "/";
