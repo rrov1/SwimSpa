@@ -8,7 +8,7 @@ import json
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -117,7 +117,18 @@ def searchForValue(keyName, keyValue, valName, listOfDict):
     if len(res) > 0:
         return res[0][valName]
     return None
- 
+
+def convert_number_for_simpleapi(value):
+    # Prüfen, ob der Wert eine Zahl ist (int oder float)
+    if not isinstance(value, (int, float)):
+        raise TypeError(f"Ungültiger Wert: {value!r} (muss int oder float sein)")
+    
+    # Ganzzahl oder Fließkommazahl umwandeln
+    if value % 1 == 0:
+        return int(value)  # Ganzzahl
+    else:
+        return float(value)  # Fließkommazahl
+
 async def main() -> None:
     sData2Send = ""
     set_run_timeout(90)
@@ -164,32 +175,32 @@ async def main() -> None:
                     currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
                     if currentIoBrVal != facade.water_heater.current_operation:
                         print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {facade.water_heater.current_operation}")
-                        sData2Send = sData2Send + "{}={}".format(ioBrDp, facade.water_heater.current_operation) + "&ack=true& "
+                        sData2Send = sData2Send + "{}={}".format(ioBrDp, facade.water_heater.current_operation) + "&"
                     
                     # Temperaturen
                     print('sending temp')
                     # temp value must be within min/max temp +/-10 degrees
                     ioBrDp = "{}.{}.AktuelleTemperatur".format(IOB_DP_BASE_PATH, nSpaNum)
-                    currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                    currentIoBrVal = float(searchForValue("id", ioBrDp, "val", currentStates))
                     if currentIoBrVal != round(facade.water_heater.current_temperature, 2):
                         print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {round(facade.water_heater.current_temperature, 2)}")
                         if float(facade.water_heater.current_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.current_temperature) < (float(facade.water_heater.max_temp) + 10):
                             print(f"current temp-> {round(facade.water_heater.current_temperature, 2)}")
-                            sData2Send = sData2Send + "{}={}".format(ioBrDp, round(facade.water_heater.current_temperature, 2)) + "&ack=true& "
+                            sData2Send = sData2Send + "{}={}".format(ioBrDp, convert_number_for_simpleapi(round(facade.water_heater.current_temperature, 2))) + "&"
                     ioBrDp = "{}.{}.ZielTemperatur".format(IOB_DP_BASE_PATH, nSpaNum)
-                    currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                    currentIoBrVal = float(searchForValue("id", ioBrDp, "val", currentStates))
                     if currentIoBrVal != round(facade.water_heater.target_temperature, 2):
                         print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {round(facade.water_heater.target_temperature, 2)}")
                         if float(facade.water_heater.target_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.target_temperature) < (float(facade.water_heater.max_temp) + 10):
                             print(f"target temp-> {round(facade.water_heater.target_temperature, 2)}")
-                            sData2Send = sData2Send + "{}={}".format(ioBrDp, round(facade.water_heater.target_temperature, 2)) + "&ack=true& "
+                            sData2Send = sData2Send + "{}={}".format(ioBrDp, convert_number_for_simpleapi(round(facade.water_heater.target_temperature, 2))) + "&"
                     ioBrDp = "{}.{}.EchteZielTemperatur".format(IOB_DP_BASE_PATH, nSpaNum)
-                    currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                    currentIoBrVal = float(searchForValue("id", ioBrDp, "val", currentStates))
                     if currentIoBrVal != round(facade.water_heater.real_target_temperature, 2):
                         print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {round(facade.water_heater.real_target_temperature, 2)}")
                         if float(facade.water_heater.real_target_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.real_target_temperature) < (float(facade.water_heater.max_temp) + 10):
                             print(f"real target temp-> {round(facade.water_heater.real_target_temperature, 2)}")
-                            sData2Send = sData2Send + "{}={}".format(ioBrDp, round(facade.water_heater.real_target_temperature, 2)) + "&ack=true& "
+                            sData2Send = sData2Send + "{}={}".format(ioBrDp, convert_number_for_simpleapi(round(facade.water_heater.real_target_temperature, 2))) + "&"
                     
                     # Wasserprflege
                     print('sending water care')
@@ -199,7 +210,7 @@ async def main() -> None:
                     currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
                     if currentIoBrVal != myMode:
                         print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {myMode}")
-                        sData2Send = sData2Send + "{}={}".format(ioBrDp, myMode) + "&ack=true& "
+                        sData2Send = sData2Send + "{}={}".format(ioBrDp, myMode) + "&"
                     
                     # Pumpen
                     print('sending pumps')
@@ -209,7 +220,7 @@ async def main() -> None:
                         currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
                         if currentIoBrVal != pump.mode:
                             print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {pump.mode}")
-                            sData2Send = sData2Send + "{}={}".format(ioBrDp, pump.mode) + "&ack=true& "
+                            sData2Send = sData2Send + "{}={}".format(ioBrDp, pump.mode) + "&"
                         # short pump state name
                         shortPumpStateNAme = cutModeName(pump.mode)
                         # calculate new pump state id
@@ -221,7 +232,7 @@ async def main() -> None:
                         currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
                         if currentIoBrVal != pumpStateId:
                             print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {pumpStateId}")
-                            sData2Send = sData2Send + "{}={}".format(ioBrDp, pumpStateId) + "&ack=true& "
+                            sData2Send = sData2Send + "{}={}".format(ioBrDp, pumpStateId) + "&"
                     
                     # Lichter
                     print('sending lights')
@@ -231,12 +242,12 @@ async def main() -> None:
                         currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
                         if str(currentIoBrVal).lower() != str(light.is_on).lower():
                             print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {str(light.is_on).lower()}")
-                            sData2Send = sData2Send + "{}={}".format(ioBrDp, str(light.is_on).lower()) + "&ack=true& "
+                            sData2Send = sData2Send + "{}={}".format(ioBrDp, str(light.is_on).lower()) + "&"
                         ioBrDp = "{}.{}.Lichter.{}.Switch".format(IOB_DP_BASE_PATH, nSpaNum, light.key)
                         currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
                         if str(currentIoBrVal).lower() != str(light.is_on).lower():
                             print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {str(light.is_on).lower()}")
-                            sData2Send = sData2Send + "{}={}".format(ioBrDp, str(light.is_on).lower()) + "&ack=true& "
+                            sData2Send = sData2Send + "{}={}".format(ioBrDp, str(light.is_on).lower()) + "&"
                     
                     # Sensoren
                     print(f"***anzahl Sensoren: {len(spaman.facade.sensors)}")
@@ -249,7 +260,7 @@ async def main() -> None:
                         currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
                         if str(currentIoBrVal).lower() != str(sensor.state).lower():
                             print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {str(sensor.state).lower()}")
-                            sData2Send = sData2Send + "{}={}".format(ioBrDp, urllib.parse.quote((str(sensor.state)).lower())) + "&ack=true& "
+                            sData2Send = sData2Send + "{}={}".format(ioBrDp, urllib.parse.quote((str(sensor.state)).lower())) + "&"
 
                     # Binary Sensoren
                     print(f'sending binary sensors, binary sensorcount: {len(spaman.facade.binary_sensors)}')
@@ -262,7 +273,7 @@ async def main() -> None:
                         currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
                         if str(currentIoBrVal).lower() != str(binary_sensor.state).lower():
                             print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {str(binary_sensor.state).lower()}")
-                            sData2Send = sData2Send + "{}={}".format(ioBrDp, urllib.parse.quote((str(binary_sensor.state)).lower())) + "&ack=true& "
+                            sData2Send = sData2Send + "{}={}".format(ioBrDp, urllib.parse.quote((str(binary_sensor.state)).lower())) + "&"
                     
                     # spaman sensoren
                     print('sending other sensors')
@@ -272,22 +283,22 @@ async def main() -> None:
                     currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
                     if currentIoBrVal != spaman.radio_sensor.state:
                         print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {str(spaman.radio_sensor.state)}")
-                        sData2Send = sData2Send + "{}={}".format(ioBrDp, urllib.parse.quote(str(spaman.radio_sensor.state))) + "&ack=true& "
+                        sData2Send = sData2Send + "{}={}".format(ioBrDp, urllib.parse.quote(str(spaman.radio_sensor.state))) + "&"
                     
                     print(f"channel_sensor-> {spaman.channel_sensor.state}")
                     ioBrDp = "{}.{}.Sensoren.RF_Channel.State".format(IOB_DP_BASE_PATH, nSpaNum)
                     currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
                     if currentIoBrVal != spaman.channel_sensor.state:
                         print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {str(spaman.channel_sensor.state)}")
-                        sData2Send = sData2Send + "{}={}".format(ioBrDp, urllib.parse.quote(str(spaman.channel_sensor.state))) + "&ack=true& "
+                        sData2Send = sData2Send + "{}={}".format(ioBrDp, urllib.parse.quote(str(spaman.channel_sensor.state))) + "&"
                     
                     print(f"ping_sensor-> {spaman.ping_sensor.state}")
                     # send always
-                    sData2Send = sData2Send + "{}.{}.Sensoren.Last_Ping.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.ping_sensor.state))) + "&ack=true& "
+                    sData2Send = sData2Send + "{}.{}.Sensoren.Last_Ping.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(str(spaman.ping_sensor.state))) + "&"
 
                     print(f"status_sensor-> {spaman.status_sensor.state}")
                     # send always
-                    sData2Send = sData2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.status_sensor.state)) + "&ack=true& "
+                    sData2Send = sData2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote(spaman.status_sensor.state)) + "&"
                     print("finished reading all data")
 
                     # kurz warten (löst das Problem mit den längeren Wartezeiten)
@@ -298,10 +309,10 @@ async def main() -> None:
                     print("connection closed/reset")
                 else:
                     print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}", file=sys.stderr)
-                    sData2Send = sData2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote("Connect failed")) + "&ack=true& "
+                    sData2Send = sData2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote("Connect failed")) + "&"
     
     if len(sData2Send) > 0:
-        sData2Send = sData2Send[:len(sData2Send)-2] + ""
+        sData2Send = sData2Send + "ack=true"
     
     if len(sData2Send) > 0:
         print(f"***data2send: {sData2Send}")
