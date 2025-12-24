@@ -12,13 +12,18 @@ async function updateSpaValues() {
     var clientId = await getState(dpBasePath + ".ClientGUID").val;
     //console.log("*** clientId: " + clientId);
     // alle spa id's (wir gehen mal davon aus, das sie immer sortiert sind)
-    var spaIdList = "", spaIPList = "";
+    var spaIdList = "", spaIPList = "", spaId = "";
     $('state[id=' + BASE_ADAPTER + "." + BASE_FOLDER + '*.ID]').each(function(id, i) {
-        spaIdList = spaIdList + getState(id).val + ",";
-        if (getState(id.replace(".ID", ".ControllerEnabled")).val == true) {
-            spaIPList = spaIPList + getState(id.replace(".ID", ".IPAddresse")).val + ",";
+        spaId = getState(id).val;
+        if (spaId != "") {
+            spaIdList = spaIdList + spaId + ",";
+            if (getState(id.replace(".ID", ".ControllerEnabled")).val == true) {
+                spaIPList = spaIPList + getState(id.replace(".ID", ".IPAddresse")).val + ",";
+            } else {
+                spaIPList = spaIPList + "0.0.0.0" + ",";
+            }
         } else {
-            spaIPList = spaIPList + "0.0.0.0" + ",";
+            console.warn("no ID set for spa controller: " + id + " try to run SpaUpdateConfig first!")
         }
     });
     if (spaIdList.endsWith(",")) {
@@ -30,6 +35,12 @@ async function updateSpaValues() {
     //console.log("*** spaIdList: " + spaIdList);
     //console.log("*** spaIPList: " + spaIPList);
     
+    if (spaIdList.length == 0) {
+        console.log("no spa controller found")
+        console.log("end")
+        return
+    }
+
     var pyScriptFolder = PY_SCRIPTS_FOLDER;
     if (!pyScriptFolder.endsWith("/")) {
         pyScriptFolder += "/";
