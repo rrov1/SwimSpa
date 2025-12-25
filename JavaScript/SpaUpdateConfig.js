@@ -51,8 +51,9 @@ async function updateSpaConfig() {
     // signal that a script is running
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
+    var disabledControllerCnt = 0;
     if (controllerDisabled) {
-        console.log("found a disabled controller, executing only selectivly configuration updates for enabled controllers, initial discovery not possible");
+        console.log("found at least one disabled controller, executing only selectivly configuration updates for enabled controllers, initial discovery not possible");
         var controller2Check = [];
         $('state[id=' + BASE_ADAPTER + "." + BASE_FOLDER + '*.IPAddresse]').each(function(id, i) {
             var spaIP = "";
@@ -62,6 +63,7 @@ async function updateSpaConfig() {
                     controller2Check[i] = spaIP;
                 } else {
                     controller2Check[i] = "";
+                    disabledControllerCnt++;
                 }
             }
         });
@@ -72,6 +74,9 @@ async function updateSpaConfig() {
                 console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath + " " + i + " " + controller2Check[i]);
                 await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_config.py ' + clientId + " " + getRestApiUrl() + " " + dpBasePath + " " + i + " " + controller2Check[i]);
             }
+        }
+        if (controller2Check.length - disabledControllerCnt == 0) {
+            console.warn("no enabled controller found, check your configuration.");
         }
     } else {
         console.log("no disabled controller, doing standard discovery")
