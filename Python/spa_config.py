@@ -5,14 +5,14 @@ import requests
 import urllib
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.3.2"
+VERSION = "0.3.3"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
 if len(sys.argv) != 4 and len(sys.argv) != 6:
     print("*** Wrong number of script arguments.", file=sys.stderr)
     print(f"*** call example: {sys.argv[0]} clientId ioBrSimpleRestApiUrl dpBasePath <<spaNum spaIP>>", file=sys.stderr)
-    quit(-1)
+    sys.exit(1)
 
 print("total arguments passed:", len(sys.argv))
 CLIENT_ID = sys.argv[1]
@@ -36,10 +36,13 @@ class SampleSpaMan(GeckoAsyncSpaMan):
         pass
 
 
-async def main() -> None:
+async def main() -> int:
+    nReturnCode = 0
     spa_args = {}
+        
     if SPA_NUM >= 0:
         spa_args["spa_address"] = SPA_IP
+    
     async with SampleSpaMan(CLIENT_ID, **spa_args) as spaman:
         print("*** looking for spas on your network ...")
 
@@ -47,8 +50,9 @@ async def main() -> None:
         await spaman.wait_for_descriptors()
 
         if len(spaman.spa_descriptors) == 0:
-            print("*** there were no spas found on your network.", file=sys.stderr)
-            quit(-1)
+            print("there were no spas found on your network.", file=sys.stderr)
+            nReturnCode = 2
+            return nReturnCode
 
         # get all spa names
         allNames = []
@@ -165,19 +169,34 @@ async def main() -> None:
             try:
                 oResponse = requests.post("{}/setBulk".format(IOBRURL), data = sJson2Send)
             except Exception as e:
-                print(e)
+                print(e, file=sys.stderr)
                 print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url", file=sys.stderr)
+                nReturnCode = 3
             else:
-                print(f"http response code: {oResponse.status_code}")
                 if oResponse.status_code != 200:
-                    print("respose text:")
-                    print(oResponse.text)
+                    print(f"http response code: {oResponse.status_code}", file=sys.stderr)
+                    print("respose text:", file=sys.stderr)
+                    print(oResponse.text, file=sys.stderr)
+                    nReturnCode = 4
+                else:
+                    print(f"http response code: {oResponse.status_code}")
+                    try:
+                        oResponseJson = oResponse.json()
+                    except ValueError:
+                        print("response is not valid JSON:", file=sys.stderr)
+                        print(oResponse.text, file=sys.stderr)
+                        nReturnCode = 5
+                    else:
+                        for entry in oResponseJson:
+                            if isinstance(entry, dict) and "error" in entry:
+                                print(entry["error"], file=sys.stderr)
+                                nReturnCode = 6
             
             await asyncio.sleep(1)
 
         # ende
         print("*** end")
-        return
+        return nReturnCode
 
 if __name__ == "__main__":
     # Install logging
@@ -189,4 +208,4 @@ if __name__ == "__main__":
     logging.getLogger().addHandler(stream_logger)
     logging.getLogger().setLevel(logging.INFO)
 
-    asyncio.run(main())
+    sys.exit(asyncio.run(main()))

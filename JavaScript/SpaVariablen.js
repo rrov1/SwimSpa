@@ -1,11 +1,11 @@
 // Achtung dieses Script benötigt: SpaGlobal.js im Ordner global (Expert Mode!)
 
 // Datenpunkte erstellen (2 SpaController, 3 Pumpen, mit Wasserfall)
-createDatapoints(2, 3, true);
+createDatapoints(1, 3, true);
 
 
 function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
-    const VERSION = "0.2.8"
+    const VERSION = "0.2.9"
     console.log("*** start: createDatapoints(nDevCnt: " + nDevCnt + ", nPumpCnt: " + nPumpCnt + ", createWaterfall: " + createWaterfall + ") v" + VERSION);
     var objectId, objectData;
 

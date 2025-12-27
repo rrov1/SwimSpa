@@ -6,14 +6,14 @@ import signal
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
 if len(sys.argv) != 7:
     print("*** Wrong number of script arguments.", file=sys.stderr)
     print("*** call example: {sys.argv[0]} clientId restApiUrl spaId spaIP targetTemp targetTempDatapoint", file=sys.stderr)
-    quit(-1)
+    sys.exit(1)
 
 def is_float(element: any) -> bool:
     #If you expect None to be passed:
@@ -37,7 +37,7 @@ print(f"Connecting to spa ip {SPA_IP}")
 TARGET_TEMP = sys.argv[5]
 if (not is_float(TARGET_TEMP)):
     print(f"error: argument {TARGET_TEMP} is not a float")
-    quit(-1)
+    sys.exit(1)
 print(f"New target temp: {TARGET_TEMP}")
 IOBR_TARGET_TEMP_DP = sys.argv[6]
 print(f"Got datapoint to update: {IOBR_TARGET_TEMP_DP}")
@@ -55,7 +55,8 @@ class SampleSpaMan(GeckoAsyncSpaMan):
         # print(f"{event}: {kwargs}")
         pass
 
-async def main() -> None:
+async def main() -> int:
+    nReturnCode = 0
     set_run_timeout(30)
 
     async with SampleSpaMan(CLIENT_ID, spa_identifier=SPA_ID, spa_address=SPA_IP) as spaman:
@@ -74,17 +75,20 @@ async def main() -> None:
                 print(f"*** water heater available")
             else:
                 print(f"error: no water heater available returned from geckolib", file=sys.stderr)
-                quit(-1)
+                nReturnCode = 2
+                return nReturnCode
             
             print(f"*** current target temp: {spaman.facade.water_heater.target_temperature}")
 
             # check that new target temp is in temp range
             if float(TARGET_TEMP) < float(spaman.facade.water_heater.min_temp):
-                print(f"error: new target temp ({TARGET_TEMP}) below minimum value ({spaman.facade.water_heater.min_temp})")
-                quit(-1)
+                print(f"error: new target temp ({TARGET_TEMP}) below minimum value ({spaman.facade.water_heater.min_temp})", file=sys.stderr)
+                nReturnCode = 3
+                return nReturnCode
             if float(TARGET_TEMP) > float(spaman.facade.water_heater.max_temp):
-                print(f"error: new target temp ({TARGET_TEMP}) above maximum value ({spaman.facade.water_heater.max_temp})")
-                quit(-1)
+                print(f"error: new target temp ({TARGET_TEMP}) above maximum value ({spaman.facade.water_heater.max_temp})", file=sys.stderr)
+                nReturnCode = 4
+                return nReturnCode
 
             if float(spaman.facade.water_heater.target_temperature) != float(TARGET_TEMP):
                 await spaman.facade.water_heater.async_set_target_temperature(TARGET_TEMP)
@@ -113,14 +117,28 @@ async def main() -> None:
             print(e)
             print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url", file=sys.stderr)
         else:
-            print(f"http response code: {oResponse.status_code}")
             if oResponse.status_code != 200:
-                print("respose text:")
-                print(oResponse.text)
+                print(f"http response code: {oResponse.status_code}", file=sys.stderr)
+                print("respose text:", file=sys.stderr)
+                print(oResponse.text, file=sys.stderr)
+                nReturnCode = 5
+            else:
+                print(f"http response code: {oResponse.status_code}")
+                try:
+                    oResponseJson = oResponse.json()
+                except ValueError:
+                    print("response is not valid JSON:", file=sys.stderr)
+                    print(oResponse.text, file=sys.stderr)
+                    nReturnCode = 6
+                else:
+                    for entry in oResponseJson:
+                        if isinstance(entry, dict) and "error" in entry:
+                            print(entry["error"], file=sys.stderr)
+                            nReturnCode = 7
         
         # ende
         print("*** end")
-        return
+        return nReturnCode
 
 if __name__ == "__main__":
     # Install logging
@@ -132,5 +150,4 @@ if __name__ == "__main__":
     logging.getLogger().addHandler(stream_logger)
     logging.getLogger().setLevel(logging.INFO)
 
-    asyncio.run(main())
-
+    sys.exit(asyncio.run(main()))

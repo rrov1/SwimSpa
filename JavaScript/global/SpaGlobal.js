@@ -8,8 +8,8 @@ function execPythonAsync(command) {
     return new Promise((resolve, reject) => {
         exec(command, function (error, stdout, stderr) {
             //console.log('*** stdout: ' + stdout);
-            if (error !== null) {
-                console.error('*** stderr: ' + error);
+            if (error) {
+                console.error('*** command failed with error code: ' + error.code + " - " + error.message);
             }
             resolve();
         });

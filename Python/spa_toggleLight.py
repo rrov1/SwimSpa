@@ -6,14 +6,14 @@ import signal
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.2.4"
+VERSION = "0.2.5"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
 if len(sys.argv) != 7:
     print("*** Wrong number of script arguments.", file=sys.stderr)
     print("*** call example: {sys.argv[0]} clientId restApiUrl spaId spaIP lightKey lightChannel", file=sys.stderr)
-    quit(-1)
+    sys.exit(1)
 
 print("Total arguments passed:", len(sys.argv))
 CLIENT_ID = sys.argv[1]
@@ -42,7 +42,8 @@ class SampleSpaMan(GeckoAsyncSpaMan):
         # print(f"{event}: {kwargs}")
         pass
 
-async def main() -> None:
+async def main() -> int:
+    nReturnCode = 0
     set_run_timeout(30)
 
     async with SampleSpaMan(CLIENT_ID, spa_identifier=SPA_ID, spa_address=SPA_IP) as spaman:
@@ -61,7 +62,8 @@ async def main() -> None:
             else:
                 print(f"*** current light mode: {spaman.facade.lights[0].is_on}")
                 print(f"error: no lights returned from geckolib", file=sys.stderr)
-                quit(-1)
+                nReturnCode = 2
+                return nReturnCode
 
             # search for light based on key
             keyNotFound = True
@@ -81,7 +83,8 @@ async def main() -> None:
             
             if keyNotFound:
                 print(f"error: light with key: {LIGHT_KEY} not found", file=sys.stderr)
-                quit(-1)
+                nReturnCode = 3
+                return nReturnCode
             
             print(f"*** light mode is now: {newLightMode}")
 
@@ -109,14 +112,28 @@ async def main() -> None:
             print(e)
             print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url", file=sys.stderr)
         else:
-            print(f"http response code: {oResponse.status_code}")
             if oResponse.status_code != 200:
-                print("respose text:")
-                print(oResponse.text)
+                print(f"http response code: {oResponse.status_code}", file=sys.stderr)
+                print("respose text:", file=sys.stderr)
+                print(oResponse.text, file=sys.stderr)
+                nReturnCode = 4
+            else:
+                print(f"http response code: {oResponse.status_code}")
+                try:
+                    oResponseJson = oResponse.json()
+                except ValueError:
+                    print("response is not valid JSON:", file=sys.stderr)
+                    print(oResponse.text, file=sys.stderr)
+                    nReturnCode = 5
+                else:
+                    for entry in oResponseJson:
+                        if isinstance(entry, dict) and "error" in entry:
+                            print(entry["error"], file=sys.stderr)
+                            nReturnCode = 6
         
         # ende
         print("*** end")
-        return
+        return nReturnCode
 
 if __name__ == "__main__":
     # Install logging
@@ -128,4 +145,4 @@ if __name__ == "__main__":
     logging.getLogger().addHandler(stream_logger)
     logging.getLogger().setLevel(logging.INFO)
 
-    asyncio.run(main())
+    sys.exit(asyncio.run(main()))

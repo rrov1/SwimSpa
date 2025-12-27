@@ -5,17 +5,18 @@ import urllib.parse
 import logging
 import signal
 import json
+from typing import Any
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.3.1"
+VERSION = "0.3.2"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
 if len(sys.argv) != 6:
     print("*** Wrong number of script arguments.", file=sys.stderr)
     print(f"*** call example: {sys.argv[0]} clientId ioBrSimpleRestApiUrl spaIds spaIPs dpBasePath", file=sys.stderr)
-    quit(-1)
+    sys.exit(1)
 
 print("total arguments passed:", len(sys.argv))
 CLIENT_ID = sys.argv[1]
@@ -129,7 +130,29 @@ def convert_number_for_simpleapi(value):
     else:
         return float(value)  # Fließkommazahl
 
-async def main() -> None:
+def safe_float(value: Any, default: float = 0.0) -> float:
+    """
+    Konvertiert value nach float.
+    Gibt default zurück, wenn die Konvertierung fehlschlägt.
+    """
+    try:
+        if value is None:
+            return default
+
+        # Strings mit Komma als Dezimaltrenner erlauben
+        if isinstance(value, str):
+            value = value.strip()
+            if value == "":
+                return default
+            value = value.replace(",", ".")
+
+        return float(value)
+
+    except (TypeError, ValueError):
+        return default
+
+async def main() -> int:
+    nReturnCode = 0
     sData2Send = ""
     set_run_timeout(90)
 
@@ -181,21 +204,21 @@ async def main() -> None:
                     print('sending temp')
                     # temp value must be within min/max temp +/-10 degrees
                     ioBrDp = "{}.{}.AktuelleTemperatur".format(IOB_DP_BASE_PATH, nSpaNum)
-                    currentIoBrVal = float(searchForValue("id", ioBrDp, "val", currentStates))
+                    currentIoBrVal = safe_float(searchForValue("id", ioBrDp, "val", currentStates), default=20.0)
                     if currentIoBrVal != round(facade.water_heater.current_temperature, 2):
                         print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {round(facade.water_heater.current_temperature, 2)}")
                         if float(facade.water_heater.current_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.current_temperature) < (float(facade.water_heater.max_temp) + 10):
                             print(f"current temp-> {round(facade.water_heater.current_temperature, 2)}")
                             sData2Send = sData2Send + "{}={}".format(ioBrDp, convert_number_for_simpleapi(round(facade.water_heater.current_temperature, 2))) + "&"
                     ioBrDp = "{}.{}.ZielTemperatur".format(IOB_DP_BASE_PATH, nSpaNum)
-                    currentIoBrVal = float(searchForValue("id", ioBrDp, "val", currentStates))
+                    currentIoBrVal = safe_float(searchForValue("id", ioBrDp, "val", currentStates), default=23.0)
                     if currentIoBrVal != round(facade.water_heater.target_temperature, 2):
                         print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {round(facade.water_heater.target_temperature, 2)}")
                         if float(facade.water_heater.target_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.target_temperature) < (float(facade.water_heater.max_temp) + 10):
                             print(f"target temp-> {round(facade.water_heater.target_temperature, 2)}")
                             sData2Send = sData2Send + "{}={}".format(ioBrDp, convert_number_for_simpleapi(round(facade.water_heater.target_temperature, 2))) + "&"
                     ioBrDp = "{}.{}.EchteZielTemperatur".format(IOB_DP_BASE_PATH, nSpaNum)
-                    currentIoBrVal = float(searchForValue("id", ioBrDp, "val", currentStates))
+                    currentIoBrVal = safe_float(searchForValue("id", ioBrDp, "val", currentStates), default=20.0)
                     if currentIoBrVal != round(facade.water_heater.real_target_temperature, 2):
                         print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {round(facade.water_heater.real_target_temperature, 2)}")
                         if float(facade.water_heater.real_target_temperature) > (float(facade.water_heater.min_temp) - 10) and float(facade.water_heater.real_target_temperature) < (float(facade.water_heater.max_temp) + 10):
@@ -322,16 +345,30 @@ async def main() -> None:
             print(e)
             print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url", file=sys.stderr)
         else:
-            print(f"http response code: {oResponse.status_code}")
             if oResponse.status_code != 200:
-                print("respose text:")
-                print(oResponse.text)
+                print(f"http response code: {oResponse.status_code}", file=sys.stderr)
+                print("respose text:", file=sys.stderr)
+                print(oResponse.text, file=sys.stderr)
+                nReturnCode = 2
+            else:
+                print(f"http response code: {oResponse.status_code}")
+                try:
+                    oResponseJson = oResponse.json()
+                except ValueError:
+                    print("response is not valid JSON:", file=sys.stderr)
+                    print(oResponse.text, file=sys.stderr)
+                    nReturnCode = 3
+                else:
+                    for entry in oResponseJson:
+                        if isinstance(entry, dict) and "error" in entry:
+                            print(entry["error"], file=sys.stderr)
+                            nReturnCode = 4
     else:
         print("nothing to send")
     
     # ende
     print("*** end")
-    return
+    return nReturnCode
 
 if __name__ == "__main__":
     # Install logging
@@ -343,4 +380,4 @@ if __name__ == "__main__":
     logging.getLogger().addHandler(stream_logger)
     logging.getLogger().setLevel(logging.INFO)
 
-    asyncio.run(main())
+    sys.exit(asyncio.run(main()))
