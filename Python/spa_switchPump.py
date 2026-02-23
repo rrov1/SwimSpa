@@ -24,9 +24,17 @@ SPA_ID = sys.argv[3]
 print(f"Connecting to spa id {SPA_ID}")
 SPA_IP = sys.argv[4]
 print(f"Connecting to spa ip {SPA_IP}")
-PUMP_ID = int(sys.argv[5])
+try:
+    PUMP_ID = int(sys.argv[5])
+except ValueError:
+    print(f"error: pump id must be an integer, got {sys.argv[5]}", file=sys.stderr)
+    sys.exit(1)
 print(f"Switching pump id {PUMP_ID}")
-NEW_PUMP_STATE = int(sys.argv[6])
+try:
+    NEW_PUMP_STATE = int(sys.argv[6])
+except ValueError:
+    print(f"error: new pump state must be an integer, got {sys.argv[6]}", file=sys.stderr)
+    sys.exit(1)
 print(f"Switching pump to state id {NEW_PUMP_STATE}")
 IOBR_PUMP_CHANNEL = sys.argv[7]
 print(f"Got channel for update: {IOBR_PUMP_CHANNEL}")
@@ -57,6 +65,7 @@ class SampleSpaMan(GeckoAsyncSpaMan):
 async def main() -> int:
     nReturnCode = 0
     set_run_timeout(30)
+    sJson2Send = ""
 
     async with SampleSpaMan(CLIENT_ID, spa_identifier=SPA_ID, spa_address=SPA_IP) as spaman:
         print(f"*** connecting to {SPA_ID} with ip {SPA_IP}")
@@ -68,20 +77,30 @@ async def main() -> int:
         result = await spaman.wait_for_facade()
 
         print(f"*** connect result-> {result}")
-        sJson2Send = ""
-        if result == True:
-            print(f"*** pump name: {spaman.facade.pumps[PUMP_ID].name}")
-            print(f"*** pump modes: {spaman.facade.pumps[PUMP_ID].modes}")
-            print(f"*** current pump mode: {spaman.cutModeName(spaman.facade.pumps[PUMP_ID].mode)}")
-            NEW_PUMP_STATE_NAME = spaman.facade.pumps[PUMP_ID].modes[NEW_PUMP_STATE]
-            print(f"*** new pump state name: {NEW_PUMP_STATE_NAME}")
-
+        if result is True:
             if len(spaman.facade.pumps) > 0:
                 print(f"*** found: {len(spaman.facade.pumps)} pumps")
             else:
                 print(f"error: no pumps returned from geckolib", file=sys.stderr)
                 nReturnCode = 2
                 return nReturnCode
+
+            if PUMP_ID < 0 or PUMP_ID >= len(spaman.facade.pumps):
+                print(f"error: pump id {PUMP_ID} out of range (available: 0-{len(spaman.facade.pumps)-1})", file=sys.stderr)
+                nReturnCode = 3
+                return nReturnCode
+
+            print(f"*** pump name: {spaman.facade.pumps[PUMP_ID].name}")
+            print(f"*** pump modes: {spaman.facade.pumps[PUMP_ID].modes}")
+            print(f"*** current pump mode: {spaman.cutModeName(spaman.facade.pumps[PUMP_ID].mode)}")
+
+            if NEW_PUMP_STATE < 0 or NEW_PUMP_STATE >= len(spaman.facade.pumps[PUMP_ID].modes):
+                print(f"error: new pump state {NEW_PUMP_STATE} out of range for pump {PUMP_ID}", file=sys.stderr)
+                nReturnCode = 4
+                return nReturnCode
+
+            NEW_PUMP_STATE_NAME = spaman.facade.pumps[PUMP_ID].modes[NEW_PUMP_STATE]
+            print(f"*** new pump state name: {NEW_PUMP_STATE_NAME}")
 
             if spaman.cutModeName(spaman.facade.pumps[PUMP_ID].mode) != NEW_PUMP_STATE_NAME:
                 await spaman.facade.pumps[PUMP_ID].async_set_mode(NEW_PUMP_STATE_NAME)
@@ -112,6 +131,11 @@ async def main() -> int:
         else:
             print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}", file=sys.stderr)
         
+        if not sJson2Send:
+            print("*** no ioBroker updates to send")
+            print("*** end")
+            return nReturnCode
+
         sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
         #print(sJson2Send)
         try:
@@ -124,7 +148,7 @@ async def main() -> int:
                 print(f"http response code: {oResponse.status_code}", file=sys.stderr)
                 print("respose text:", file=sys.stderr)
                 print(oResponse.text, file=sys.stderr)
-                nReturnCode = 3
+                nReturnCode = 5
             else:
                 print(f"http response code: {oResponse.status_code}")
                 try:
@@ -132,12 +156,12 @@ async def main() -> int:
                 except ValueError:
                     print("response is not valid JSON:", file=sys.stderr)
                     print(oResponse.text, file=sys.stderr)
-                    nReturnCode = 4
+                    nReturnCode = 6
                 else:
                     for entry in oResponseJson:
                         if isinstance(entry, dict) and "error" in entry:
                             print(entry["error"], file=sys.stderr)
-                            nReturnCode = 5
+                            nReturnCode = 7
 
         # ende
         print("*** end")

@@ -45,6 +45,7 @@ class SampleSpaMan(GeckoAsyncSpaMan):
 async def main() -> int:
     nReturnCode = 0
     set_run_timeout(30)
+    sJson2Send = ""
 
     async with SampleSpaMan(CLIENT_ID, spa_identifier=SPA_ID, spa_address=SPA_IP) as spaman:
         print(f"*** connecting to {SPA_ID} with ip {SPA_IP}")
@@ -56,11 +57,10 @@ async def main() -> int:
         result = await spaman.wait_for_facade()
 
         print(f"*** connect result-> {result}")
-        if result == True:
+        if result is True:
             if len(spaman.facade.lights) > 0:
                 print(f"*** light count: {len(spaman.facade.lights)}")
             else:
-                print(f"*** current light mode: {spaman.facade.lights[0].is_on}")
                 print(f"error: no lights returned from geckolib", file=sys.stderr)
                 nReturnCode = 2
                 return nReturnCode
@@ -73,10 +73,10 @@ async def main() -> int:
                     keyNotFound = False
                     if light.is_on:
                         print(f"*** switching light off")
-                        await spaman.facade.lights[0].async_turn_off()
+                        await light.async_turn_off()
                     else:
                         print(f"*** switching light on")
-                        await spaman.facade.lights[0].async_turn_on()
+                        await light.async_turn_on()
                     await asyncio.sleep(1)
                     newLightMode = light.is_on
                     break
@@ -87,9 +87,6 @@ async def main() -> int:
                 return nReturnCode
             
             print(f"*** light mode is now: {newLightMode}")
-
-            #
-            sJson2Send = ""
 
             # sending state updates to ioBroker
             sJson2Send = sJson2Send + "{}.Switch={}".format(IOBR_LIGHT_CHANNEL, str(newLightMode).lower()) + "&ack=true& "
@@ -104,6 +101,11 @@ async def main() -> int:
         else:
             print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}", file=sys.stderr)
         
+        if not sJson2Send:
+            print("*** no ioBroker updates to send")
+            print("*** end")
+            return nReturnCode
+
         sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
         #print(sJson2Send)
         try:
