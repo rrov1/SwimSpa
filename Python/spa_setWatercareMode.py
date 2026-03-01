@@ -4,6 +4,7 @@ import logging
 import requests
 import signal
 import urllib.parse
+from enum import IntEnum
 
 dictEn2De = {'Away From Home': 'Abwesend',
           'Standard': 'Standard', 
@@ -14,14 +15,22 @@ dictEn2De = {'Away From Home': 'Abwesend',
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.3.1"
+class ExitCode(IntEnum):
+    SUCCESS = 0
+    INVALID_ARGUMENTS = 1
+    IOBROKER_HTTP_ERROR = 2
+    IOBROKER_INVALID_JSON = 3
+    IOBROKER_RESPONSE_ERROR = 4
+
+
+VERSION = "0.3.2"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
 if len(sys.argv) != 7:
     print("*** Wrong number of script arguments.", file=sys.stderr)
     print("*** call example: {sys.argv[0]} clientId restApiUrl spaId spaIP waterCareModeIdx devicePath", file=sys.stderr)
-    sys.exit(1)
+    sys.exit(ExitCode.INVALID_ARGUMENTS)
 
 def is_integer(n):
     try:
@@ -43,11 +52,11 @@ print(f"Connecting to spa id {SPA_IP}")
 NEW_WATERCAREMODE_IDX = sys.argv[5]
 if (not is_integer(NEW_WATERCAREMODE_IDX)):
     print(f"error: value {NEW_WATERCAREMODE_IDX} of argument 4 is not an int", file=sys.stderr)
-    sys.exit(1)
+    sys.exit(ExitCode.INVALID_ARGUMENTS)
 NEW_WATERCAREMODE_IDX = int(NEW_WATERCAREMODE_IDX)
-if (NEW_WATERCAREMODE_IDX < 0 and NEW_WATERCAREMODE_IDX > 4):
+if (NEW_WATERCAREMODE_IDX < 0 or NEW_WATERCAREMODE_IDX > 4):
     print(f"error: value {NEW_WATERCAREMODE_IDX} is out of allowed range", file=sys.stderr)
-    sys.exit(1)
+    sys.exit(ExitCode.INVALID_ARGUMENTS)
 print(f"New watercare mode index: {NEW_WATERCAREMODE_IDX}")
 IOBR_DEVICE_PATH = sys.argv[6]
 print(f"Got device path to update: {IOBR_DEVICE_PATH}")
@@ -66,7 +75,7 @@ class SampleSpaMan(GeckoAsyncSpaMan):
         pass
 
 async def main() -> int:
-    nReturnCode = 0
+    nReturnCode = ExitCode.SUCCESS
     set_run_timeout(30)
 
     async with SampleSpaMan(CLIENT_ID, spa_identifier=SPA_ID, spa_address=SPA_IP) as spaman:
@@ -110,6 +119,11 @@ async def main() -> int:
             sJson2Send = sJson2Send + "{}.Sensoren.Status.State={}".format(IOBR_DEVICE_PATH, urllib.parse.quote("Connect failed")) + "&ack=true& "
         
         sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
+        if not sJson2Send.strip():
+            print("*** no payload generated for setBulk, skipping REST call")
+            print("*** end")
+            return ExitCode.SUCCESS
+
         print(sJson2Send)
         try:
             oResponse = requests.post("{}/setBulk".format(IOBRURL), data = sJson2Send)
@@ -121,7 +135,7 @@ async def main() -> int:
                 print(f"http response code: {oResponse.status_code}", file=sys.stderr)
                 print("respose text:", file=sys.stderr)
                 print(oResponse.text, file=sys.stderr)
-                nReturnCode = 2
+                nReturnCode = ExitCode.IOBROKER_HTTP_ERROR
             else:
                 print(f"http response code: {oResponse.status_code}")
                 try:
@@ -129,12 +143,12 @@ async def main() -> int:
                 except ValueError:
                     print("response is not valid JSON:", file=sys.stderr)
                     print(oResponse.text, file=sys.stderr)
-                    nReturnCode = 3
+                    nReturnCode = ExitCode.IOBROKER_INVALID_JSON
                 else:
                     for entry in oResponseJson:
                         if isinstance(entry, dict) and "error" in entry:
                             print(entry["error"], file=sys.stderr)
-                            nReturnCode = 4
+                            nReturnCode = ExitCode.IOBROKER_RESPONSE_ERROR
 
         # ende
         print("*** end")

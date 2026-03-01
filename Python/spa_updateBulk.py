@@ -6,17 +6,26 @@ import logging
 import signal
 import json
 from typing import Any
+from enum import IntEnum
 
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.3.2"
+class ExitCode(IntEnum):
+    SUCCESS = 0
+    INVALID_ARGUMENTS = 1
+    IOBROKER_HTTP_ERROR = 2
+    IOBROKER_INVALID_JSON = 3
+    IOBROKER_RESPONSE_ERROR = 4
+
+
+VERSION = "0.3.3"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
 if len(sys.argv) != 6:
     print("*** Wrong number of script arguments.", file=sys.stderr)
     print(f"*** call example: {sys.argv[0]} clientId ioBrSimpleRestApiUrl spaIds spaIPs dpBasePath", file=sys.stderr)
-    sys.exit(1)
+    sys.exit(ExitCode.INVALID_ARGUMENTS)
 
 print("total arguments passed:", len(sys.argv))
 CLIENT_ID = sys.argv[1]
@@ -152,7 +161,7 @@ def safe_float(value: Any, default: float = 0.0) -> float:
         return default
 
 async def main() -> int:
-    nReturnCode = 0
+    nReturnCode = ExitCode.SUCCESS
     sData2Send = ""
     set_run_timeout(90)
 
@@ -349,7 +358,7 @@ async def main() -> int:
                 print(f"http response code: {oResponse.status_code}", file=sys.stderr)
                 print("respose text:", file=sys.stderr)
                 print(oResponse.text, file=sys.stderr)
-                nReturnCode = 2
+                nReturnCode = ExitCode.IOBROKER_HTTP_ERROR
             else:
                 print(f"http response code: {oResponse.status_code}")
                 try:
@@ -357,12 +366,12 @@ async def main() -> int:
                 except ValueError:
                     print("response is not valid JSON:", file=sys.stderr)
                     print(oResponse.text, file=sys.stderr)
-                    nReturnCode = 3
+                    nReturnCode = ExitCode.IOBROKER_INVALID_JSON
                 else:
                     for entry in oResponseJson:
                         if isinstance(entry, dict) and "error" in entry:
                             print(entry["error"], file=sys.stderr)
-                            nReturnCode = 4
+                            nReturnCode = ExitCode.IOBROKER_RESPONSE_ERROR
     else:
         print("nothing to send")
     
