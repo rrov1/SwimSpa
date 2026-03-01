@@ -104,8 +104,8 @@ async def main() -> ExitCode:
 
             print(f"*** light mode is now: {newLightMode}")
 
-            sJson2Send = sJson2Send + "{}.Switch={}".format(IOBR_LIGHT_CHANNEL, str(newLightMode).lower()) + "&ack=true& "
-            sJson2Send = sJson2Send + "{}.Is_On={}".format(IOBR_LIGHT_CHANNEL, str(newLightMode).lower()) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.Switch={}".format(IOBR_LIGHT_CHANNEL, str(newLightMode).lower()) + "&"
+            sJson2Send = sJson2Send + "{}.Is_On={}".format(IOBR_LIGHT_CHANNEL, str(newLightMode).lower()) + "&"
 
             await asyncio.sleep(1)
             await spaman.async_reset()
@@ -119,7 +119,9 @@ async def main() -> ExitCode:
             print("*** end")
             return return_code
 
-        sJson2Send = sJson2Send[: len(sJson2Send) - 2] + ""
+        if len(sJson2Send) > 0:
+            sJson2Send = sJson2Send + "ack=true"
+        
         try:
             oResponse = requests.post("{}/setBulk".format(IOBRURL), data=sJson2Send)
         except Exception as e:

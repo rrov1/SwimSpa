@@ -131,12 +131,12 @@ async def main() -> ExitCode:
                     if set_pump_state_name == mode:
                         set_pump_state = index
                         break
-                sJson2Send = sJson2Send + "{}.Switch={}".format(IOBR_PUMP_CHANNEL, set_pump_state) + "&ack=true& "
-                sJson2Send = sJson2Send + "{}.Modus={}".format(IOBR_PUMP_CHANNEL, set_pump_state_name) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.Switch={}".format(IOBR_PUMP_CHANNEL, set_pump_state) + "&"
+                sJson2Send = sJson2Send + "{}.Modus={}".format(IOBR_PUMP_CHANNEL, set_pump_state_name) + "&"
             else:
                 print(f"*** nothing to do, pump mode is already: {spaman.cutModeName(spaman.facade.pumps[PUMP_ID].mode)}")
-                sJson2Send = sJson2Send + "{}.Switch={}".format(IOBR_PUMP_CHANNEL, NEW_PUMP_STATE) + "&ack=true& "
-                sJson2Send = sJson2Send + "{}.Modus={}".format(IOBR_PUMP_CHANNEL, new_pump_state_name) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.Switch={}".format(IOBR_PUMP_CHANNEL, NEW_PUMP_STATE) + "&"
+                sJson2Send = sJson2Send + "{}.Modus={}".format(IOBR_PUMP_CHANNEL, new_pump_state_name) + "&"
 
             await asyncio.sleep(5)
             await spaman.async_reset()
@@ -150,7 +150,9 @@ async def main() -> ExitCode:
             print("*** end")
             return return_code
 
-        sJson2Send = sJson2Send[: len(sJson2Send) - 2] + ""
+        if len(sJson2Send) > 0:
+            sJson2Send = sJson2Send + "ack=true"
+        
         try:
             oResponse = requests.post("{}/setBulk".format(IOBRURL), data=sJson2Send)
         except Exception as e:
