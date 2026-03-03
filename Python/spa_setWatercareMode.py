@@ -21,6 +21,7 @@ class ExitCode(IntEnum):
     IOBROKER_HTTP_ERROR = 2
     IOBROKER_INVALID_JSON = 3
     IOBROKER_RESPONSE_ERROR = 4
+    IOBROKER_REQUEST_EXCEPTION = 5
 
 
 VERSION = "0.3.2"
@@ -98,7 +99,7 @@ async def main() -> int:
             if currentWatercareMode == NEW_WATERCAREMODE_IDX:
                 print(f"*** nothing to do, old and new watercare mode are equal")
                 # sending state updates to ioBroker
-                sJson2Send = sJson2Send + "{}.WasserpflegeSwitch={}".format(IOBR_DEVICE_PATH, currentWatercareMode) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.WasserpflegeSwitch={}".format(IOBR_DEVICE_PATH, currentWatercareMode) + "&"
             else:
                 print(f"*** changing watercare mode from \"{spaman.facade.water_care.modes[currentWatercareMode]}\" to: \"{spaman.facade.water_care.modes[NEW_WATERCAREMODE_IDX]}\"")
 
@@ -106,7 +107,7 @@ async def main() -> int:
                 await spaman.facade.water_care.async_set_mode(spaman.facade.water_care.modes[NEW_WATERCAREMODE_IDX])
             
                 # sending state updates to ioBroker
-                sJson2Send = sJson2Send + "{}.WasserpflegeSwitch={}".format(IOBR_DEVICE_PATH, NEW_WATERCAREMODE_IDX) + "&ack=true& "
+                sJson2Send = sJson2Send + "{}.WasserpflegeSwitch={}".format(IOBR_DEVICE_PATH, NEW_WATERCAREMODE_IDX) + "&"
             
             # kurz warten (löst das Problem mit den längeren Wartezeiten)
             await asyncio.sleep(1)
@@ -116,13 +117,15 @@ async def main() -> int:
             print("connection closed/reset")
         else:
             print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}", file=sys.stderr)
-            sJson2Send = sJson2Send + "{}.Sensoren.Status.State={}".format(IOBR_DEVICE_PATH, urllib.parse.quote("Connect failed")) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}.Sensoren.Status.State={}".format(IOBR_DEVICE_PATH, urllib.parse.quote("Connect failed")) + "&"
         
-        sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
-        if not sJson2Send.strip():
-            print("*** no payload generated for setBulk, skipping REST call")
+        if not sJson2Send:
+            print("*** no ioBroker updates to send")
             print("*** end")
-            return ExitCode.SUCCESS
+            return nReturnCode
+
+        if len(sJson2Send) > 0:
+            sJson2Send = sJson2Send + "ack=true"
 
         print(sJson2Send)
         try:
@@ -130,6 +133,7 @@ async def main() -> int:
         except Exception as e:
             print(e)
             print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url", file=sys.stderr)
+            nReturnCode = ExitCode.IOBROKER_REQUEST_EXCEPTION
         else:
             if oResponse.status_code != 200:
                 print(f"http response code: {oResponse.status_code}", file=sys.stderr)

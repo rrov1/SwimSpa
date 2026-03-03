@@ -16,6 +16,7 @@ class ExitCode(IntEnum):
     IOBROKER_HTTP_ERROR = 2
     IOBROKER_INVALID_JSON = 3
     IOBROKER_RESPONSE_ERROR = 4
+    IOBROKER_REQUEST_EXCEPTION = 5
 
 
 VERSION = "0.3.3"
@@ -343,6 +344,11 @@ async def main() -> int:
                     print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}", file=sys.stderr)
                     sData2Send = sData2Send + "{}.{}.Sensoren.Status.State={}".format(IOB_DP_BASE_PATH, nSpaNum, urllib.parse.quote("Connect failed")) + "&"
     
+    if not sData2Send:
+            print("*** no ioBroker updates to send")
+            print("*** end")
+            return nReturnCode
+    
     if len(sData2Send) > 0:
         sData2Send = sData2Send + "ack=true"
     
@@ -353,6 +359,7 @@ async def main() -> int:
         except Exception as e:
             print(e)
             print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url", file=sys.stderr)
+            nReturnCode = ExitCode.IOBROKER_REQUEST_EXCEPTION
         else:
             if oResponse.status_code != 200:
                 print(f"http response code: {oResponse.status_code}", file=sys.stderr)

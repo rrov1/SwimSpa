@@ -44,7 +44,7 @@ SPA_NUM = -1
 SPA_IP = ""
 if len(sys.argv) == 6:
     if not is_integer(sys.argv[4]):
-        print(f"*** invalid spaNum argument: {sys.argv[4]}", file=sys.stderr)
+        print(f"*** invalid spaNum argument (not an integer): {sys.argv[4]}", file=sys.stderr)
         sys.exit(ExitCode.INVALID_ARGUMENTS)
     SPA_NUM = int(sys.argv[4])
     print(f"Number of ioBroker device: {SPA_NUM}")

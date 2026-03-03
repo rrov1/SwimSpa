@@ -16,6 +16,7 @@ class ExitCode(IntEnum):
     IOBROKER_HTTP_ERROR = 5
     IOBROKER_INVALID_JSON = 6
     IOBROKER_RESPONSE_ERROR = 7
+    IOBROKER_REQUEST_EXCEPTION = 8
 
 
 VERSION = "0.3.3"
@@ -110,7 +111,7 @@ async def main() -> int:
                 print(f"*** new target temp is identical to current, nothing to do")
             
             # sending state updates to ioBroker
-            sJson2Send = sJson2Send + "{}={}".format(IOBR_TARGET_TEMP_DP, str(spaman.facade.water_heater.target_temperature)) + "&ack=true& "
+            sJson2Send = sJson2Send + "{}={}".format(IOBR_TARGET_TEMP_DP, str(spaman.facade.water_heater.target_temperature)) + "&"
             
             # kurz warten (löst das Problem mit den längeren Wartezeiten)
             await asyncio.sleep(1)
@@ -121,18 +122,20 @@ async def main() -> int:
         else:
             print(f"*** cannot establish connection to spa controller, spa_state: {spaman.spa_state}", file=sys.stderr)
         
-        sJson2Send = sJson2Send[:len(sJson2Send)-2] + ""
-        if not sJson2Send.strip():
-            print("*** no payload generated for setBulk, skipping REST call")
+        if not sJson2Send:
+            print("*** no ioBroker updates to send")
             print("*** end")
-            return ExitCode.SUCCESS
+            return nReturnCode
 
-        #print(sJson2Send)
+        if len(sJson2Send) > 0:
+            sJson2Send = sJson2Send + "ack=true"
+
         try:
             oResponse = requests.post("{}/setBulk".format(IOBRURL), data = sJson2Send)
         except Exception as e:
             print(e)
             print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url", file=sys.stderr)
+            nReturnCode = ExitCode.IOBROKER_REQUEST_EXCEPTION
         else:
             if oResponse.status_code != 200:
                 print(f"http response code: {oResponse.status_code}", file=sys.stderr)

@@ -17,9 +17,10 @@ class ExitCode(IntEnum):
     INVALID_HTTP_RESPONSE = 5
     IOBROKER_API_ERROR = 6
     SPA_CONNECTION_FAILED = 7
+    IOBROKER_REQUEST_EXCEPTION = 8
 
 
-VERSION = "0.2.6"
+VERSION = "0.2.7"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -127,7 +128,7 @@ async def main() -> ExitCode:
         except Exception as e:
             print(e)
             print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url", file=sys.stderr)
-            return_code = ExitCode.HTTP_ERROR
+            return_code = ExitCode.IOBROKER_REQUEST_EXCEPTION
         else:
             if oResponse.status_code != 200:
                 print(f"http response code: {oResponse.status_code}", file=sys.stderr)
