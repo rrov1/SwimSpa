@@ -49,10 +49,23 @@ async function setTargetTemp(obj) {
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
     // spa_setTargetTemp.py clientId restApiUrl spaId targetTemp targetTempDatapoint
-    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_setTargetTemp.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + newState + " " + obj.id);
-    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_setTargetTemp.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + newState + " " + obj.id);
+    const targetTempCommand = buildShellCommand([
+        SPA_EXECUTEABLE,
+        pyScriptFolder + 'spa_setTargetTemp.py',
+        clientId,
+        getRestApiUrl(),
+        spaId,
+        spaIP,
+        newState,
+        obj.id
+    ]);
+    console.log('*** executing: ' + targetTempCommand);
 
-    // signal that there is no longer a script is running
-    setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
+    try {
+        await execPythonAsync(targetTempCommand);
+    } finally {
+        // signal that there is no longer a script is running
+        setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
+    }
     console.log("end");
 }

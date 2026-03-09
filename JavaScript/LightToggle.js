@@ -53,10 +53,23 @@ async function toggleLight(obj) {
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
     // spa_toggleLight.py clientId spaId lightKey lightChannel
-    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_toggleLight.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + lightKey + " " + obj.channelId);
-    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_toggleLight.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + lightKey + " " + obj.channelId);
+    const toggleLightCommand = buildShellCommand([
+        SPA_EXECUTEABLE,
+        pyScriptFolder + 'spa_toggleLight.py',
+        clientId,
+        getRestApiUrl(),
+        spaId,
+        spaIP,
+        lightKey,
+        obj.channelId
+    ]);
+    console.log('*** executing: ' + toggleLightCommand);
 
-    // signal that there is no longer a script is running
-    setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
+    try {
+        await execPythonAsync(toggleLightCommand);
+    } finally {
+        // signal that there is no longer a script is running
+        setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
+    }
     console.log("end");
 }

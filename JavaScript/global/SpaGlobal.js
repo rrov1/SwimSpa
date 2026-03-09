@@ -10,10 +10,25 @@ function execPythonAsync(command) {
             //console.log('*** stdout: ' + stdout);
             if (error) {
                 console.error('*** command failed with error code: ' + error.code + " - " + error.message);
+                reject(error);
+                return;
             }
             resolve();
         });
     })
+}
+
+function buildShellCommand(parts) {
+    return parts
+        .filter((part) => part !== undefined && part !== null)
+        .map((part) => {
+            const value = String(part);
+            if (value === "") {
+                return "''";
+            }
+            return "'" + value.replace(/'/g, "'\\''") + "'";
+        })
+        .join(" ");
 }
 
 function Sleep(milliseconds) {

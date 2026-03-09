@@ -51,10 +51,23 @@ async function setWatercareMode(obj) {
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
     // spa_toggleLight.py clientId restApiUrl spaId lightKey lightChannel
-    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_setWatercareMode.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + newWaterCareModeIdx + " " + getParent(obj.id, 1));
-    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_setWatercareMode.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + newWaterCareModeIdx + " " + getParent(obj.id, 1));
+    const watercareModeCommand = buildShellCommand([
+        SPA_EXECUTEABLE,
+        pyScriptFolder + 'spa_setWatercareMode.py',
+        clientId,
+        getRestApiUrl(),
+        spaId,
+        spaIP,
+        newWaterCareModeIdx,
+        getParent(obj.id, 1)
+    ]);
+    console.log('*** executing: ' + watercareModeCommand);
 
-    // signal that there is no longer a script is running
-    setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
+    try {
+        await execPythonAsync(watercareModeCommand);
+    } finally {
+        // signal that there is no longer a script is running
+        setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
+    }
     console.log("end");
 }
