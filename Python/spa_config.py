@@ -3,16 +3,35 @@ import asyncio
 import logging
 import requests
 import urllib
+from enum import IntEnum
 from geckolib import GeckoAsyncSpaMan, GeckoSpaEvent  # type: ignore
 
-VERSION = "0.3.3"
+class ExitCode(IntEnum):
+    SUCCESS = 0
+    INVALID_ARGUMENTS = 1
+    NO_SPAS_FOUND = 2
+    IOBROKER_REQUEST_EXCEPTION = 3
+    IOBROKER_HTTP_ERROR = 4
+    IOBROKER_INVALID_JSON = 5
+    IOBROKER_RESPONSE_ERROR = 6
+
+
+VERSION = "0.3.5"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
 if len(sys.argv) != 4 and len(sys.argv) != 6:
     print("*** Wrong number of script arguments.", file=sys.stderr)
     print(f"*** call example: {sys.argv[0]} clientId ioBrSimpleRestApiUrl dpBasePath <<spaNum spaIP>>", file=sys.stderr)
-    sys.exit(1)
+    sys.exit(ExitCode.INVALID_ARGUMENTS)
+
+
+def is_integer(value: str) -> bool:
+    try:
+        int(value)
+        return True
+    except ValueError:
+        return False
 
 print("total arguments passed:", len(sys.argv))
 CLIENT_ID = sys.argv[1]
@@ -24,6 +43,9 @@ print(f"Base path to datapoints: {IOB_DP_BASE_PATH}")
 SPA_NUM = -1
 SPA_IP = ""
 if len(sys.argv) == 6:
+    if not is_integer(sys.argv[4]):
+        print(f"*** invalid spaNum argument (not an integer): {sys.argv[4]}", file=sys.stderr)
+        sys.exit(ExitCode.INVALID_ARGUMENTS)
     SPA_NUM = int(sys.argv[4])
     print(f"Number of ioBroker device: {SPA_NUM}")
     SPA_IP = sys.argv[5]
@@ -37,7 +59,7 @@ class SampleSpaMan(GeckoAsyncSpaMan):
 
 
 async def main() -> int:
-    nReturnCode = 0
+    nReturnCode = ExitCode.SUCCESS
     spa_args = {}
         
     if SPA_NUM >= 0:
@@ -51,7 +73,7 @@ async def main() -> int:
 
         if len(spaman.spa_descriptors) == 0:
             print("there were no spas found on your network.", file=sys.stderr)
-            nReturnCode = 2
+            nReturnCode = ExitCode.NO_SPAS_FOUND
             return nReturnCode
 
         # get all spa names
@@ -171,13 +193,13 @@ async def main() -> int:
             except Exception as e:
                 print(e, file=sys.stderr)
                 print("an error occured on sending an http request to ioBroker Rest API, no data was sent, check url", file=sys.stderr)
-                nReturnCode = 3
+                nReturnCode = ExitCode.IOBROKER_REQUEST_EXCEPTION
             else:
                 if oResponse.status_code != 200:
                     print(f"http response code: {oResponse.status_code}", file=sys.stderr)
                     print("respose text:", file=sys.stderr)
                     print(oResponse.text, file=sys.stderr)
-                    nReturnCode = 4
+                    nReturnCode = ExitCode.IOBROKER_HTTP_ERROR
                 else:
                     print(f"http response code: {oResponse.status_code}")
                     try:
@@ -185,12 +207,12 @@ async def main() -> int:
                     except ValueError:
                         print("response is not valid JSON:", file=sys.stderr)
                         print(oResponse.text, file=sys.stderr)
-                        nReturnCode = 5
+                        nReturnCode = ExitCode.IOBROKER_INVALID_JSON
                     else:
                         for entry in oResponseJson:
                             if isinstance(entry, dict) and "error" in entry:
                                 print(entry["error"], file=sys.stderr)
-                                nReturnCode = 6
+                                nReturnCode = ExitCode.IOBROKER_RESPONSE_ERROR
             
             await asyncio.sleep(1)
 
