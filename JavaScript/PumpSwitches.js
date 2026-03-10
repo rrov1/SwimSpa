@@ -54,10 +54,24 @@ async function switchPump(obj) {
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
     // spa_switchPump.py clientId restApiUrl spaId pumpId newPumpState pumpChannel
-    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_switchPump.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + pumpId + " " + newState + " " + obj.channelId);
-    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_switchPump.py ' + clientId + " " + getRestApiUrl() + " " + spaId + " " + spaIP + " " + pumpId + " " + newState + " " + obj.channelId);
+    const switchPumpCommand = buildShellCommand([
+        SPA_EXECUTEABLE,
+        pyScriptFolder + 'spa_switchPump.py',
+        clientId,
+        getRestApiUrl(),
+        spaId,
+        spaIP,
+        pumpId,
+        newState,
+        obj.channelId
+    ]);
+    console.log('*** executing: ' + switchPumpCommand);
 
-    // signal that there is no longer a script is running
-    setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
+    try {
+        await execPythonAsync(switchPumpCommand);
+    } finally {
+        // signal that there is no longer a script is running
+        setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
+    }
     console.log("end");
 }

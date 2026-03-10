@@ -10,11 +10,34 @@ function execPythonAsync(command) {
             //console.log('*** stdout: ' + stdout);
             if (error) {
                 console.error('*** command failed with error code: ' + error.code + " - " + error.message);
+                reject(error);
+                return;
             }
             resolve();
         });
     })
 }
+
+function buildShellCommand(parts) {
+    const filteredParts = parts.filter((part) => part !== undefined && part !== null);
+    if (filteredParts.length === 0) {
+        return "";
+    }
+
+    const commandParts = String(filteredParts[0]).trim().split(/\s+/).filter((part) => part !== "");
+    const argumentParts = filteredParts.slice(1).map((part) => String(part));
+
+    return commandParts
+        .concat(argumentParts)
+        .map((value) => {
+            if (value === "") {
+                return "''";
+            }
+            return "'" + value.replace(/'/g, "'\\''") + "'";
+        })
+        .join(" ");
+}
+
 
 function Sleep(milliseconds) {
     return new Promise(resolve => setTimeout(resolve, milliseconds));

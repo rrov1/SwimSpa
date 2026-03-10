@@ -67,10 +67,22 @@ async function updateSpaValues() {
     setState(dpBasePath + '.scriptRunning', {val: true, ack: true});
 
     // spa_updateBulk.py clientId restApiUrl spaIdList dpBasePath
-    console.log('*** executing: ' + SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_updateBulk.py ' + clientId + " " + getRestApiUrl() + " " + spaIdList + " " + spaIPList + " " + dpBasePath);
-    await execPythonAsync(SPA_EXECUTEABLE + ' ' + pyScriptFolder + 'spa_updateBulk.py ' + clientId + " " + getRestApiUrl() + " " + spaIdList + " " + spaIPList + " " + dpBasePath);
+    const updateCommand = buildShellCommand([
+        SPA_EXECUTEABLE,
+        pyScriptFolder + 'spa_updateBulk.py',
+        clientId,
+        getRestApiUrl(),
+        spaIdList,
+        spaIPList,
+        dpBasePath
+    ]);
+    console.log('*** executing: ' + updateCommand);
 
-    // signal that there is no longer a script is running
-    setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
+    try {
+        await execPythonAsync(updateCommand);
+    } finally {
+        // signal that there is no longer a script is running
+        setState(dpBasePath + '.scriptRunning', {val: false, ack: true});
+    }
     console.log("end");
 }
