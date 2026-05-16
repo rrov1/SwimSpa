@@ -1,12 +1,19 @@
 // Achtung dieses Script benötigt: SpaGlobal.js im Ordner global (Expert Mode!)
 
-// Datenpunkte erstellen (2 SpaController, 3 Pumpen, mit Wasserfall)
-createDatapoints(1, 3, true);
+// Datenpunkte erstellen – ein Eintrag pro SpaController/Pool:
+//   pumps:    Anzahl Pumpen
+//   blower:   Gebläse vorhanden (true/false)
+//   waterfall: Wasserfall vorhanden (true/false)
+createDatapoints([
+    { pumps: 3, blower: false, waterfall: false },   // 0: Pool
+    { pumps: 1, blower: true, waterfall: false }     // 1: Spa
+]);
 
 
-function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
-    const VERSION = "0.2.9"
-    console.log("*** start: createDatapoints(nDevCnt: " + nDevCnt + ", nPumpCnt: " + nPumpCnt + ", createWaterfall: " + createWaterfall + ") v" + VERSION);
+function createDatapoints(devices) {
+    const VERSION = "0.3.0"
+    const nDevCnt = devices.length;
+    console.log("*** start: createDatapoints(" + nDevCnt + " devices) v" + VERSION);
     var objectId, objectData;
 
     // globale Datenpunkte
@@ -18,12 +25,12 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
     objectId = BASE_ADAPTER + "." + BASE_FOLDER + ".preferredHeating";
     if (!existsState(objectId)) {
         createState(objectId, {
-            read: true, 
-            write: true, 
-            name: "preferredHeating", 
+            read: true,
+            write: true,
+            name: "preferredHeating",
             type: 'number',
             min: 0,
-            max: nDevCnt-1,
+            max: nDevCnt - 1,
             role: 'value',
             states: spaStates,
             desc: "ID des Whirlpool/SwimSpa der (bevorzugt) beheizt werden soll."
@@ -40,10 +47,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
     objectId = BASE_ADAPTER + "." + BASE_FOLDER + ".preferredHeatingName";
     if (!existsState(objectId)) {
         createState(objectId, {
-            read: true, 
-            write: false, 
+            read: true,
+            write: false,
             name: "preferredHeatingName",
-            type: "string", 
+            type: "string",
             role: "info.name",
             desc: "Name des Gerätes das bevorzugt beheizt wird",
             def: ""
@@ -60,10 +67,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
     objectId = BASE_ADAPTER + "." + BASE_FOLDER + ".automaticHeating";
     if (!existsState(objectId)) {
         createState(objectId, {
-            read: true, 
-            write: true, 
+            read: true,
+            write: true,
             name: "automaticHeating",
-            type: "boolean", 
+            type: "boolean",
             role: "switch.enable",
             desc: "Automatisches Heizen aktiv/inaktiv",
             def: true
@@ -80,23 +87,23 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
     objectId = BASE_ADAPTER + "." + BASE_FOLDER + ".automaticTargetTemp";
     if (!existsState(objectId)) {
         createState(objectId, {
-            read: true, 
-            write: true, 
+            read: true,
+            write: true,
             name: "automaticTargetTemp",
-            type: "boolean", 
+            type: "boolean",
             role: "switch.enable",
             desc: "Automatisches nachführen der Zieltemperatur aktiv/inaktiv",
             def: true
         });
     }
-    
+
     objectId = BASE_ADAPTER + "." + BASE_FOLDER + ".scriptRunning";
     if (!existsState(objectId)) {
         createState(objectId, {
-            read: true, 
-            write: true, 
+            read: true,
+            write: true,
             name: "scriptRunning",
-            type: "boolean", 
+            type: "boolean",
             role: "switch",
             desc: "Ein Python Script läuft gerade",
             def: false
@@ -108,17 +115,17 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
     if (existsObject(objectId)) {
         deleteState(objectId);
     }
-    
+
     // GUID
     createState(BASE_FOLDER + ".ClientGUID", {
-        read: true, 
-        write: false, 
+        read: true,
+        write: false,
         name: "ClientGUID",
-        type: "string", 
+        type: "string",
         role: "text",
         desc: "Client GUID für Gecko Kommunikation",
         def: ""
-    }, function() {
+    }, function () {
         if (getState(BASE_FOLDER + ".ClientGUID").val == "") {
             let guid = uuid4();
             console.log("*** created guid: " + guid);
@@ -131,30 +138,34 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
     objectId = BASE_ADAPTER + "." + BASE_FOLDER + ".discoverIP";
     if (!existsState(objectId)) {
         createState(objectId, {
-            read: true, 
-            write: true, 
+            read: true,
+            write: true,
             name: "discoverIP",
-            type: "string", 
+            type: "string",
             role: "state",
             desc: "Komma getrennte Liste der IP-Adressen der SpaController, wird benötigt beim Betrieb von ioBroker in einem Docker Container oder wenn der SpaController in einem anderen Subnetz liegt.",
             def: ""
         });
     }
-    
+
     // Variablen pro SpaController
     for (let nCurDev = 0; nCurDev < nDevCnt; nCurDev++) {
+        const nPumpCnt = devices[nCurDev].pumps || 0;
+        const createWaterfall = devices[nCurDev].waterfall || false;
+        const createBlower = devices[nCurDev].blower || false;
+
         setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev, {
-            "type" : "device",
-            "common" : {"name": "SpaController-" + nCurDev, "desc": "SpaController", "role": "SpaController"}
+            "type": "device",
+            "common": { "name": "SpaController-" + nCurDev, "desc": "SpaController", "role": "SpaController" }
         });
 
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".ID";
         if (!existsState(objectId)) {
             createState(objectId, {
-                read: true, 
-                write: false, 
-                name: "ID", 
-                type: "string", 
+                read: true,
+                write: false,
+                name: "ID",
+                type: "string",
                 role: "info.address",
                 desc: "Geräte ID",
                 def: ""
@@ -171,10 +182,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".U_ID";
         if (!existsState(objectId)) {
             createState(objectId, {
-                read: true, 
-                write: false, 
-                name: "U_ID", 
-                type: "string", 
+                read: true,
+                write: false,
+                name: "U_ID",
+                type: "string",
                 role: "info.address",
                 desc: "Geräte U_ID",
                 def: ""
@@ -191,10 +202,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".IPAddresse";
         if (!existsState(objectId)) {
             createState(objectId, {
-                read: true, 
-                write: true, 
-                name: "IPAddresse", 
-                type: "string", 
+                read: true,
+                write: true,
+                name: "IPAddresse",
+                type: "string",
                 role: "info.ip",
                 desc: "IP-Adresse des SpaControllers",
                 def: ""
@@ -204,10 +215,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Name";
         if (!existsState(objectId)) {
             createState(objectId, {
-                read: true, 
-                write: false, 
-                name: "Name", 
-                type: "string", 
+                read: true,
+                write: false,
+                name: "Name",
+                type: "string",
                 role: "info",
                 desc: "Name",
                 def: ""
@@ -220,14 +231,14 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
                 if (err) log('cannot write object: ' + err);
             });
         }
-        
+
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Temperatureinheit";
         if (!existsState(objectId)) {
             createState(objectId, {
-                read: true, 
-                write: false, 
-                name: "Temperatureinheit", 
-                type: "string", 
+                read: true,
+                write: false,
+                name: "Temperatureinheit",
+                type: "string",
                 role: "info",
                 desc: "Temperatureinheit",
                 def: "°C"
@@ -244,10 +255,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".AktuelleTemperatur";
         if (!existsState(objectId)) {
             createState(objectId, {
-                read: true, 
-                write: false, 
-                name: "AktuelleTemperatur", 
-                type: "number", 
+                read: true,
+                write: false,
+                name: "AktuelleTemperatur",
+                type: "number",
                 role: "value.temperature",
                 desc: "Aktuelle Temperatur",
                 def: -1
@@ -260,14 +271,14 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
                 if (err) log('cannot write object: ' + err);
             });
         }
-        
+
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".ZielTemperatur";
         if (!existsState(objectId)) {
             createState(objectId, {
-                read: true, 
-                write: true, 
-                name: "ZielTemperatur", 
-                type: "number", 
+                read: true,
+                write: true,
+                name: "ZielTemperatur",
+                type: "number",
                 role: "value.temperature",
                 desc: "Zieltemperatur",
                 def: 35,
@@ -288,10 +299,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".EchteZielTemperatur";
         if (!existsState(objectId)) {
             createState(objectId, {
-                read: true, 
-                write: false, 
-                name: "EchteZielTemperatur", 
-                type: "number", 
+                read: true,
+                write: false,
+                name: "EchteZielTemperatur",
+                type: "number",
                 role: "value.temperature",
                 desc: "Echte Zieltemperatur",
                 def: -1
@@ -308,10 +319,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Heizer";
         if (!existsState(objectId)) {
             createState(objectId, {
-                read: true, 
-                write: false, 
-                name: "Heizer", 
-                type: "string", 
+                read: true,
+                write: false,
+                name: "Heizer",
+                type: "string",
                 role: "info.status",
                 desc: "Aktivität Heizer",
                 def: ""
@@ -340,10 +351,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".WasserpflegeModi";
         if (!existsState(objectId)) {
             createState(objectId, {
-                read: true, 
-                write: true, 
-                name: "WasserpflegeModi", 
-                type: "string", 
+                read: true,
+                write: true,
+                name: "WasserpflegeModi",
+                type: "string",
                 role: "text",
                 desc: "Auswählbare Wasserpflegemodi",
                 def: ""
@@ -360,8 +371,8 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".WasserpflegeSwitch";
         if (!existsState(objectId)) {
             createState(objectId, {
-                read: true, 
-                write: true, 
+                read: true,
+                write: true,
                 name: "Wasserpflegemodusschalter",
                 type: 'number',
                 role: 'indicator',
@@ -387,36 +398,36 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".ControllerEnabled";
         if (!existsState(objectId)) {
             createState(objectId, {
-                read: true, 
-                write: true, 
+                read: true,
+                write: true,
                 name: "ControllerEnabled",
-                type: "boolean", 
+                type: "boolean",
                 role: "switch.enable",
                 desc: "Controller aktiv und durch Skripte überwacht und steuerbar.",
                 def: true
             });
         }
-        
+
         // Pumpen
         setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Pumpen", {
-            "type" : "folder",
-            "common" : {"name": "Pumpen"}
+            "type": "folder",
+            "common": { "name": "Pumpen" }
         });
 
         // Pumpen anlegen
-        for (let nCurPump = 1; nCurPump < nPumpCnt+1; nCurPump++) {
+        for (let nCurPump = 1; nCurPump < nPumpCnt + 1; nCurPump++) {
             setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Pumpen.P" + nCurPump, {
-                "type" : "channel",
-                "common" : {"name": "Pumpe"}
+                "type": "channel",
+                "common": { "name": "Pumpe" }
             });
-            
+
             objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Pumpen.P" + nCurPump + ".Name";
             if (!existsState(objectId)) {
                 createState(objectId, {
-                    read: true, 
-                    write: false, 
-                    name: "Name", 
-                    type: "string", 
+                    read: true,
+                    write: false,
+                    name: "Name",
+                    type: "string",
                     role: "info.name",
                     desc: "Name der Pumpe",
                     def: ""
@@ -433,10 +444,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Pumpen.P" + nCurPump + ".Modus";
             if (!existsObject(objectId)) {
                 createState(objectId, {
-                    read: true, 
-                    write: false, 
-                    name: "Modus", 
-                    type: "string", 
+                    read: true,
+                    write: false,
+                    name: "Modus",
+                    type: "string",
                     role: "state",
                     desc: "Aktueller Modus",
                     def: ""
@@ -453,10 +464,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Pumpen.P" + nCurPump + ".Modi";
             if (!existsObject(objectId)) {
                 createState(objectId, {
-                    read: true, 
-                    write: false, 
-                    name: "Modi", 
-                    type: "string", 
+                    read: true,
+                    write: false,
+                    name: "Modi",
+                    type: "string",
                     role: "text",
                     desc: "Auswählbare Modi",
                     def: ""
@@ -469,10 +480,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
                     if (err) log('cannot write object: ' + err);
                 });
             }
-            
+
             createState(BASE_FOLDER + "." + nCurDev + ".Pumpen.P" + nCurPump + ".Switch", {
-                read: true, 
-                write: true, 
+                read: true,
+                write: true,
                 name: "Switch",
                 type: 'number',
                 min: 0,
@@ -491,17 +502,17 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         // Wasserfall
         if (createWaterfall) {
             setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Pumpen.Waterfall", {
-                "type" : "channel",
-                "common" : {"name": "Waterfall"}
+                "type": "channel",
+                "common": { "name": "Waterfall" }
             });
-            
+
             objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Pumpen.Waterfall" + ".Name";
             if (!existsObject(objectId)) {
                 createState(objectId, {
-                    read: true, 
-                    write: false, 
-                    name: "Name", 
-                    type: "string", 
+                    read: true,
+                    write: false,
+                    name: "Name",
+                    type: "string",
                     role: "info.name",
                     desc: "Name der Pumpe",
                     def: ""
@@ -511,10 +522,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Pumpen.Waterfall" + ".Modus";
             if (!existsObject(objectId)) {
                 createState(objectId, {
-                    read: true, 
-                    write: false, 
-                    name: "Modus", 
-                    type: "string", 
+                    read: true,
+                    write: false,
+                    name: "Modus",
+                    type: "string",
                     role: "state",
                     desc: "Aktueller Modus",
                     def: ""
@@ -524,19 +535,19 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Pumpen.Waterfall" + ".Modi";
             if (!existsObject(objectId)) {
                 createState(objectId, {
-                    read: true, 
-                    write: false, 
-                    name: "Modi", 
-                    type: "string", 
+                    read: true,
+                    write: false,
+                    name: "Modi",
+                    type: "string",
                     role: "text",
                     desc: "Auswählbare Modi",
                     def: ""
                 });
             }
-            
+
             createState(BASE_FOLDER + "." + nCurDev + ".Pumpen.Waterfall" + ".Switch", {
-                read: true, 
-                write: true, 
+                read: true,
+                write: true,
                 name: "Switch",
                 type: 'number',
                 min: 0,
@@ -552,23 +563,108 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             });
         }
 
+        // Blower
+        if (createBlower) {
+            setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Blower", {
+                "type": "folder",
+                "common": { "name": "Blower" }
+            });
+            setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Blower.BL", {
+                "type": "channel",
+                "common": { "name": "Blower" }
+            });
+
+            objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Blower.BL.Name";
+            if (!existsObject(objectId)) {
+                createState(objectId, {
+                    read: true,
+                    write: false,
+                    name: "Name",
+                    type: "string",
+                    role: "info.name",
+                    desc: "Name des Blowers",
+                    def: ""
+                });
+            } else {
+                objectData = getObject(objectId);
+                objectData.common.write = false;
+                setObject(objectId, objectData, function (err) {
+                    if (err) log('cannot write object: ' + err);
+                });
+            }
+
+            objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Blower.BL.Modus";
+            if (!existsObject(objectId)) {
+                createState(objectId, {
+                    read: true,
+                    write: false,
+                    name: "Modus",
+                    type: "string",
+                    role: "state",
+                    desc: "Aktueller Modus",
+                    def: ""
+                });
+            } else {
+                objectData = getObject(objectId);
+                objectData.common.write = false;
+                setObject(objectId, objectData, function (err) {
+                    if (err) log('cannot write object: ' + err);
+                });
+            }
+
+            objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Blower.BL.Modi";
+            if (!existsObject(objectId)) {
+                createState(objectId, {
+                    read: true,
+                    write: false,
+                    name: "Modi",
+                    type: "string",
+                    role: "text",
+                    desc: "Auswählbare Modi",
+                    def: ""
+                });
+            } else {
+                objectData = getObject(objectId);
+                objectData.common.write = false;
+                setObject(objectId, objectData, function (err) {
+                    if (err) log('cannot write object: ' + err);
+                });
+            }
+
+            createState(BASE_FOLDER + "." + nCurDev + ".Blower.BL.Switch", {
+                read: true,
+                write: true,
+                name: "Switch",
+                type: 'number',
+                min: 0,
+                max: 1,
+                role: 'level',
+                states: {
+                    0: 'OFF',
+                    1: 'HI'
+                },
+                desc: "Blower ein-/ausschalten",
+                def: 0
+            });
+        }
+
         // Licht
         setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Lichter", {
-            "type" : "folder",
-            "common" : {"name": "Beleuchtung"}
+            "type": "folder",
+            "common": { "name": "Beleuchtung" }
         });
         setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Lichter.LI", {
-            "type" : "channel",
-            "common" : {"name": "Beleuchtung"}
+            "type": "channel",
+            "common": { "name": "Beleuchtung" }
         });
 
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Lichter.LI.Name";
         if (!existsObject(objectId)) {
             createState(objectId, {
-                read: true, 
-                write: false, 
-                name: "Name", 
-                type: "string", 
+                read: true,
+                write: false,
+                name: "Name",
+                type: "string",
                 role: "info.name",
                 desc: "Name des Lichts",
                 def: ""
@@ -585,10 +681,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Lichter.LI.Is_On";
         if (!existsObject(objectId)) {
             createState(objectId, {
-                read: true, 
-                write: false, 
-                name: "Is_On", 
-                type: "boolean", 
+                read: true,
+                write: false,
+                name: "Is_On",
+                type: "boolean",
                 role: "state",
                 desc: "Aktueller Status",
                 def: false
@@ -606,10 +702,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Lichter.LI.Switch";
         if (!existsObject(objectId)) {
             createState(objectId, {
-                read: true, 
-                write: true, 
-                name: "Switch", 
-                type: "boolean", 
+                read: true,
+                write: true,
+                name: "Switch",
+                type: "boolean",
                 role: "button",
                 desc: "Lichtschalter",
                 def: false
@@ -625,24 +721,24 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
 
         // Sensoren: Boolean
         setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren", {
-            "type" : "folder",
-            "common" : {"name": "Sensoren"}
+            "type": "folder",
+            "common": { "name": "Sensoren" }
         });
         // Sensoren: Boolean
         var sSensors = ["FILTER STATUS:CLEAN", "FILTER STATUS:PURGE", "SMART WINTER MODE:ACTIVE"];
         for (let i = 0; i < sSensors.length; i++) {
             setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_"), {
-                "type" : "channel",
-                "common" : {"name": sSensors[i]}
+                "type": "channel",
+                "common": { "name": sSensors[i] }
             });
-            
+
             objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_") + ".Name";
             if (!existsObject(objectId)) {
                 createState(objectId, {
-                    read: true, 
-                    write: false, 
-                    name: "Name", 
-                    type: "string", 
+                    read: true,
+                    write: false,
+                    name: "Name",
+                    type: "string",
                     role: "info.name",
                     desc: "Name des Sensors",
                     def: ""
@@ -659,10 +755,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_") + ".State";
             if (!existsObject(objectId)) {
                 createState(objectId, {
-                    read: true, 
-                    write: false, 
-                    name: "State", 
-                    type: "boolean", 
+                    read: true,
+                    write: false,
+                    name: "State",
+                    type: "boolean",
                     role: "state",
                     desc: "Sensorstatus",
                     def: false
@@ -679,20 +775,20 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         }
 
         // Sensoren: String
-        sSensors = ["CIRCULATING PUMP", "OZONE", "Last Ping", "Status", "SMART WINTER MODE:RISK", "HEATING", "PUMP 1 STATE", "PUMP 2 STATE", "PUMP 3 STATE", "WATERFALL STATE"];
+        sSensors = ["CIRCULATING PUMP", "OZONE", "Last Ping", "Status", "SMART WINTER MODE:RISK", "HEATING", "PUMP 1 STATE", "PUMP 2 STATE", "PUMP 3 STATE", "WATERFALL STATE", "BLOWER STATE"];
         for (let i = 0; i < sSensors.length; i++) {
             setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_"), {
-                "type" : "channel",
-                "common" : {"name": sSensors[i]}
+                "type": "channel",
+                "common": { "name": sSensors[i] }
             });
 
             objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_") + ".Name";
             if (!existsObject(objectId)) {
                 createState(objectId, {
-                    read: true, 
-                    write: false, 
-                    name: "Name", 
-                    type: "string", 
+                    read: true,
+                    write: false,
+                    name: "Name",
+                    type: "string",
                     role: "info.name",
                     desc: "Name des Sensors",
                     def: ""
@@ -709,10 +805,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_") + ".State";
             if (!existsObject(objectId)) {
                 createState(objectId, {
-                    read: true, 
-                    write: false, 
-                    name: "State", 
-                    type: "string", 
+                    read: true,
+                    write: false,
+                    name: "State",
+                    type: "string",
                     role: "state",
                     desc: "Sensorstatus",
                     def: ""
@@ -731,17 +827,17 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         sSensors = ["RF Channel"];
         for (let i = 0; i < sSensors.length; i++) {
             setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_"), {
-                "type" : "channel",
-                "common" : {"name": sSensors[i]}
+                "type": "channel",
+                "common": { "name": sSensors[i] }
             });
 
             objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_") + ".Name";
             if (!existsObject(objectId)) {
                 createState(objectId, {
-                    read: true, 
-                    write: false, 
-                    name: "Name", 
-                    type: "string", 
+                    read: true,
+                    write: false,
+                    name: "Name",
+                    type: "string",
                     role: "info.name",
                     desc: "Name des Sensors",
                     def: ""
@@ -758,10 +854,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_") + ".State";
             if (!existsObject(objectId)) {
                 createState(objectId, {
-                    read: true, 
-                    write: false, 
-                    name: "State", 
-                    type: "number", 
+                    read: true,
+                    write: false,
+                    name: "State",
+                    type: "number",
                     role: "state",
                     desc: "Sensorstatus"
                 });
@@ -770,7 +866,7 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
                 objectData = getObject(objectId);
                 objectData.common.write = false;
                 objectData.common.type = "number";
-                objectData.common.def = -1;                
+                objectData.common.def = -1;
                 setObject(objectId, objectData, function (err) {
                     if (err) log('cannot write object: ' + err);
                 });
@@ -781,17 +877,17 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
         sSensors = ["RF Signal"];
         for (let i = 0; i < sSensors.length; i++) {
             setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_"), {
-                "type" : "channel",
-                "common" : {"name": sSensors[i]}
+                "type": "channel",
+                "common": { "name": sSensors[i] }
             });
 
             objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_") + ".Name";
             if (!existsObject(objectId)) {
                 createState(objectId, {
-                    read: true, 
-                    write: false, 
-                    name: "Name", 
-                    type: "string", 
+                    read: true,
+                    write: false,
+                    name: "Name",
+                    type: "string",
                     role: "info.name",
                     desc: "Name des Sensors",
                     def: ""
@@ -808,10 +904,10 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Sensoren." + sSensors[i].replace(/ /g, "_").replace(/:/g, "_") + ".State";
             if (!existsObject(objectId)) {
                 createState(objectId, {
-                    read: true, 
-                    write: false, 
-                    name: "State", 
-                    type: "number", 
+                    read: true,
+                    write: false,
+                    name: "State",
+                    type: "number",
                     role: "level",
                     unit: "%",
                     desc: "Sensorstatus",
@@ -839,8 +935,8 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
 
         // Reminder
         setObject(BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Erinnerungen", {
-            "type" : "channel",
-            "common" : {"name": "Erinnerungen"}
+            "type": "channel",
+            "common": { "name": "Erinnerungen" }
         });
 
         // Reminder: string - löschen wir nicht mehr benötigt
@@ -855,12 +951,12 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
             objectId = BASE_ADAPTER + "." + BASE_FOLDER + "." + nCurDev + ".Erinnerungen." + sReminders[i].replace(/ /g, "_").replace(/:/g, "_");
             if (!existsObject(objectId)) {
                 createState(objectId, {
-                    read: true, 
-                    write: false, 
-                    name: sReminders[i].replace(/ /g, "_").replace(/:/g, "_"), 
-                    type: "number", 
+                    read: true,
+                    write: false,
+                    name: sReminders[i].replace(/ /g, "_").replace(/:/g, "_"),
+                    type: "number",
                     role: "info",
-                    desc: sReminderDesc[i], 
+                    desc: sReminderDesc[i],
                     def: 0
                 });
             } else {
@@ -883,23 +979,23 @@ function createDatapoints(nDevCnt, nPumpCnt, createWaterfall) {
 // This uses a cryptographically insecure random number generated at Math.random() in a security context.
 // gekennzeichnet wurde. Kann man sich streiten, aber ich tausche die Funktion der Einfachheit halber.
 function uuid4() {
-  const crypto = require("crypto")
-  let array = new Uint8Array(16)
-  crypto.randomFillSync(array)
+    const crypto = require("crypto")
+    let array = new Uint8Array(16)
+    crypto.randomFillSync(array)
 
-  // Manipulate the 9th byte
-  array[8] &= 0b00111111 // Clear the first two bits
-  array[8] |= 0b10000000 // Set the first two bits to 10
+    // Manipulate the 9th byte
+    array[8] &= 0b00111111 // Clear the first two bits
+    array[8] |= 0b10000000 // Set the first two bits to 10
 
-  // Manipulate the 7th byte
-  array[6] &= 0b00001111 // Clear the first four bits
-  array[6] |= 0b01000000 // Set the first four bits to 0100
+    // Manipulate the 7th byte
+    array[6] &= 0b00001111 // Clear the first four bits
+    array[6] |= 0b01000000 // Set the first four bits to 0100
 
-  const pattern = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-  let idx = 0
+    const pattern = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    let idx = 0
 
-  return pattern.replace(
-    /XX/g,
-    () => array[idx++].toString(16).padStart(2, "0"), // padStart ensures a leading zero, if needed
-  )
+    return pattern.replace(
+        /XX/g,
+        () => array[idx++].toString(16).padStart(2, "0"), // padStart ensures a leading zero, if needed
+    )
 }

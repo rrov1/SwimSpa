@@ -94,6 +94,10 @@ def buildBulkGetforSpa(basePath, spaNum, facade):
     for pump in facade.pumps:
         ids2Get = ids2Get + "{}.{}.Pumpen.{}.Modus".format(basePath, spaNum, pump.key) + ","
         ids2Get = ids2Get + "{}.{}.Pumpen.{}.Switch".format(basePath, spaNum, pump.key) + ","
+    # Blower
+    for blower in facade.blowers:
+        ids2Get = ids2Get + "{}.{}.Blower.{}.Modus".format(basePath, spaNum, blower.key) + ","
+        ids2Get = ids2Get + "{}.{}.Blower.{}.Switch".format(basePath, spaNum, blower.key) + ","
     # Lichter
     for light in facade.lights:
         ids2Get = ids2Get + "{}.{}.Lichter.{}.Is_On".format(basePath, spaNum, light.key) + ","
@@ -126,7 +130,7 @@ def searchForValue(keyName, keyValue, valName, listOfDict):
     # search a list of dicts, find a keyName with keyValue and return value of item valName in this dict
     res = [element for element in listOfDict if element[keyName] == keyValue]
     if len(res) > 0:
-        return res[0][valName]
+        return res[0].get(valName)
     return None
 
 def convert_number_for_simpleapi(value):
@@ -267,6 +271,27 @@ async def main() -> int:
                             print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {pumpStateId}")
                             sData2Send = sData2Send + "{}={}".format(ioBrDp, pumpStateId) + "&"
                     
+                    # Blower
+                    print('sending blowers')
+                    for blower in facade.blowers:
+                        print(f"blower_key: {blower.key}, blower_name: {blower.name}-> {blower.mode}, {blower.modes}")
+                        ioBrDp = "{}.{}.Blower.{}.Modus".format(IOB_DP_BASE_PATH, nSpaNum, blower.key)
+                        currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                        if currentIoBrVal != blower.mode:
+                            print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {blower.mode}")
+                            sData2Send = sData2Send + "{}={}".format(ioBrDp, blower.mode) + "&"
+                        shortBlowerStateName = cutModeName(blower.mode)
+                        blowerStateId = 0
+                        for x in range(len(blower.modes)):
+                            if shortBlowerStateName == blower.modes[x]:
+                                blowerStateId = x
+                                break
+                        ioBrDp = "{}.{}.Blower.{}.Switch".format(IOB_DP_BASE_PATH, nSpaNum, blower.key)
+                        currentIoBrVal = searchForValue("id", ioBrDp, "val", currentStates)
+                        if currentIoBrVal != blowerStateId:
+                            print(f"value of {ioBrDp} is different ioBr: {currentIoBrVal} != {blowerStateId}")
+                            sData2Send = sData2Send + "{}={}".format(ioBrDp, blowerStateId) + "&"
+
                     # Lichter
                     print('sending lights')
                     for light in facade.lights:

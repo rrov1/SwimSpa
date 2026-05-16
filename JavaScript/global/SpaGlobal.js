@@ -1,8 +1,10 @@
 // Pfade für die Datenpunkablage
 const BASE_ADAPTER = "javascript.0";
 const BASE_FOLDER = "Datenpunkte.SwimSpa";
-const SPA_EXECUTEABLE = "python3"
-const PY_SCRIPTS_FOLDER = "/SpaController"
+// const SPA_EXECUTEABLE = "python3"
+const SPA_EXECUTEABLE = "/home/tom/.pyenv/shims/python3"
+//const PY_SCRIPTS_FOLDER = "/SpaController"
+const PY_SCRIPTS_FOLDER = "/home/SwimSpa/Python"
 
 function execPythonAsync(command) {
     return new Promise((resolve, reject) => {
@@ -46,7 +48,7 @@ function Sleep(milliseconds) {
 function getRestApiUrl() {
     //console.log("*** hostname: " + require("os").hostname());
     // get host ip (wir gehen mal davon aus, das Simple Rest API auch auf dem gleichen ioBroker läuft, Multihost ignorieren wir mal)
-    var objectData = getObject("system.host."+ require("os").hostname());
+    var objectData = getObject("system.host." + require("os").hostname());
     var ioBrIpAddress = "";
     for (var i = 0; i <= objectData.common.address.length - 1; i++) {
         ioBrIpAddress = objectData.common.address[i]
