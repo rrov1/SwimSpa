@@ -1,5 +1,12 @@
 <!-- TOC depthfrom:2 -->
 
+Das ist ein Fork von https://github.com/rrov1/SwimSpa
+Wurde hier nur um 2 Features erweitert:
+- Manche gecko Whirlpools haben nicht nur Pumpen sondern auch ein Geblaese -> um Switch Blower Funktion erweitert. die auch von geckolib unterstützt wird)
+- Möglichkeit bei der Steuerung von mehr als einem Pool, pro Pool eine unterschiedliche Anzahl von Pumpen und Gebläse zu konfigurieren
+
+Der Rest ist eine Kopie von rrov1
+  
 - [1. Funktionsumfang](#1-funktionsumfang)
 - [2. Installation/Update](#2-installationupdate)
     - [2.1. gazoodle/geckolib github](#21-gazoodlegeckolib-github)
