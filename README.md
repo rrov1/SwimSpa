@@ -127,9 +127,10 @@ Die Python-Skripte werden von den JavaScript-Skripten aus aufgerufen mit den nö
 
 | **Parameter** | **Wert**                                       |
 | --------------- | ------------------------------------------------ |
-| 1             | Anzahl Spa Controller im Netz, typ. Weise: 1   |
-| 2             | Anzahl Pumpen pro Spa Controller, typ. Weise 3 |
+| 1             | Anzahl Pumpen pro Spa Controller, typ. Weise 3 |
+| 2             | Datenpunkte für Gebläse mit anlegen            |
 | 3             | Datenpunkte für Wasserfall mit anlegen         |
+
 * Im einfachsten Fall (1 Spa Controller, 3 Pumpen) muss folgender Quelltext genutzt werden:
   ```
   createDatapoints([
