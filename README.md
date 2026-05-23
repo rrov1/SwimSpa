@@ -124,6 +124,7 @@ Die Python-Skripte werden von den JavaScript-Skripten aus aufgerufen mit den nö
   ```
 * Die Funktion nimmt als Parameter ein Array entgegen, welches pro Spa Controller eine individuelle Konfiguration der Anzahl von Pumpen zulässt, sowie Gebläse und Wasserfall.
 * Beschreibung der Parameter pro Spa Controller
+
 | **Parameter** | **Wert**                                       |
 | --------------- | ------------------------------------------------ |
 | 1             | Anzahl Spa Controller im Netz, typ. Weise: 1   |
