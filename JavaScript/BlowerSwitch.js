@@ -62,6 +62,8 @@ async function switchBlower(obj) {
 
     try {
         await execPythonAsync(switchBlowerCommand);
+    } catch(err) {
+        console.error('*** command failed with error code: ' + err.code + " - " + err.message);
     } finally {
         // signal that there is no longer a script running
         setState(dpBasePath + '.scriptRunning', {val: false, ack: true});

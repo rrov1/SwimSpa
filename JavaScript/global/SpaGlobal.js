@@ -1,17 +1,14 @@
 // Pfade für die Datenpunkablage
 const BASE_ADAPTER = "javascript.0";
 const BASE_FOLDER = "Datenpunkte.SwimSpa";
-// const SPA_EXECUTEABLE = "python3"
-const SPA_EXECUTEABLE = "/home/tom/.pyenv/shims/python3"
-//const PY_SCRIPTS_FOLDER = "/SpaController"
-const PY_SCRIPTS_FOLDER = "/home/SwimSpa/Python"
+const SPA_EXECUTEABLE = "python3"
+const PY_SCRIPTS_FOLDER = "/SpaController"
 
 function execPythonAsync(command) {
     return new Promise((resolve, reject) => {
         exec(command, function (error, stdout, stderr) {
             //console.log('*** stdout: ' + stdout);
             if (error) {
-                console.error('*** command failed with error code: ' + error.code + " - " + error.message);
                 reject(error);
                 return;
             }

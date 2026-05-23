@@ -1,17 +1,10 @@
 <!-- TOC depthfrom:2 -->
 
-Das ist ein Fork von https://github.com/rrov1/SwimSpa
-Wurde hier nur um 2 Features erweitert:
-- Manche gecko Whirlpools haben nicht nur Pumpen sondern auch ein Geblaese -> um Switch Blower Funktion erweitert, die auch von geckolib unterstützt wird
-- Möglichkeit bei der Steuerung von mehr als einem Pool, pro Pool eine unterschiedliche Anzahl von Pumpen und Gebläse zu konfigurieren
-
-Der Rest ist eine Kopie von rrov1
-  
 - [1. Funktionsumfang](#1-funktionsumfang)
 - [2. Installation/Update](#2-installationupdate)
     - [2.1. gazoodle/geckolib github](#21-gazoodlegeckolib-github)
     - [2.2. Python Skripte](#22-python-skripte)
-    - [2.3. Javascript Skripte für ioBroker](#23-javascript-skripte-f%C3%BCr-iobroker)
+    - [2.3. JavaScript Skripte für ioBroker](#23-javascript-skripte-f%C3%BCr-iobroker)
         - [2.3.1. Voraussetzungen](#231-voraussetzungen)
         - [2.3.2. Schritt 1: Skript SpaGlobal.js bereitstellen](#232-schritt-1-skript-spaglobaljs-bereitstellen)
         - [2.3.3. Schritt 2: Erstellen bzw. Aktualisieren der Datenpunkte](#233-schritt-2-erstellen-bzw-aktualisieren-der-datenpunkte)
@@ -31,9 +24,10 @@ Der Rest ist eine Kopie von rrov1
 
 * [X] Unterstützung mehrere Spa Controller
 * [X] Bereitstellen von Datenpunkten mit der Konfiguration des Spa Controllers
-* [X] Bereistellen von Datenpunkten mit aktuellen Laufzeitinformationen (z.B. Temperatur usw.)
+* [X] Bereitstellen von Datenpunkten mit aktuellen Laufzeitinformationen (z.B. Temperatur usw.)
 * [X] Schalten der Pumpen
 * [X] Schalten der Beleuchtung
+* [X] Schalten des Gebläses
 * [X] Einstellen der Zieltemperatur
 * [X] Einstellen des Wasserpflegemodus
 * [X] Erinnerungen
@@ -44,14 +38,14 @@ Der Rest ist eine Kopie von rrov1
 Hier auf Github werden 2 Arten von Skripten bereitgestellt:
 
 1. Python-Skripte im Ordner: [Pyhton](Python), über die das geckolib API angesprochen wird
-2. Javascript-Skripte im Ordner: [Javascript](JavaScript), welche im Javascript Adapter angelegt werden müssen
+2. JavaScript-Skripte im Ordner: [Javascript](JavaScript), welche im JavaScript Adapter angelegt werden müssen
 
 ### 2.1. gazoodle/geckolib (github)
 
 Quelle: [https://github.com/gazoodle/geckolib](https://github.com/gazoodle/geckolib)
 
 Voraussetzung zur Installation: **Python3 mind. v3.13** & **Pip** (am besten unter einem Linux, nur Versionen die unter [Support](https://devguide.python.org/versions/) sind)<br>
-**Wichtig:** Die geckolib ab v1.0.0 benötigt Python 3.13 (Abhängigkeit). Unbedingt prüfen, denn diese Version enthält Änderungen die nicht mit vorherigen Versionen kompatibel sind. Diese Scripte unterstützen **nur** noch geckolib ab v1.0.0 und damit muss Python 3.13 installiert sein.
+**Wichtig:** Die geckolib ab v1.0.0 benötigt Python 3.13 (Abhängigkeit). Unbedingt prüfen, denn diese Version enthält Änderungen die nicht mit vorherigen Versionen kompatibel sind. Diese Skripte unterstützen **nur** noch geckolib ab v1.0.0 und damit muss Python 3.13 installiert sein.
 
 Installation: `sudo pip install geckolib`<br>
 Update: `sudo pip install geckolib --upgrade`<br>
@@ -64,7 +58,7 @@ Für die Python-Skripte sind noch folgende Bibliotheken bereitzustellen:
 
 * requests: `sudo pip3 install requests`
 
-Alle Python Skripte aus dem Repository (Ordner: [Python](Python)) müssen in einem Verzeichnis bereitgestellt werden. Im Beispiel nutzen wir jetzt direkt einen Order unterhalb `/`, clonen das Github Repo und kompieren die Dateien aus dem Ordner Python ans eigentliche Ziel. Danach wird noch der owner angepasst.
+Alle Python Skripte aus dem Repository (Ordner: [Python](Python)) müssen in einem Verzeichnis bereitgestellt werden. Im Beispiel nutzen wir jetzt direkt einen Order unterhalb `/`, clonen das Github Repo und kopieren die Dateien aus dem Ordner Python ans eigentliche Ziel. Danach wird noch der owner angepasst.
 
 ```
 ~$ sudo mkdir /SpaController
@@ -90,17 +84,17 @@ drwxr-xr-x 23 root     root     4096 Apr  2 11:37 ..
 -rw-r--r--  1 iobroker iobroker 7566 Apr  2 11:51 spa_updateBulk.py
 ```
 
-Die Python-Skripte werden von den Javascript-Skripten aus aufgerufen mit den nötigen Parametern.<br>
+Die Python-Skripte werden von den JavaScript-Skripten aus aufgerufen mit den nötigen Parametern.<br>
 
 **Wichtig:** ioBroker benötigt Zugriff auf die Python-Skripte, der Ablageort kann z.B. auch `/opt/iobroker/node_modules/iobroker.javascript` sein, das könnte allerdings mal Probleme mit Adapter oder ioBroker Updates geben.
 
-### 2.3. Javascript Skripte für ioBroker
+### 2.3. JavaScript Skripte für ioBroker
 
 #### 2.3.1. Voraussetzungen
 
 * Adapter: "Simple RESTful API" installiert und eine konfigurierte Instanz am laufen (bitte prüfen, dass die IP in der Instanzkonfiguration passend eingestellt ist, getestet sind die Skripte mit IPv4, egal ob 0.0.0.0 oder die IP des Netzwerkadapters)
-* Adapter: Javascript/Blockly installiert und eine Instanz am laufen
-* Konfiguration des Javascript Adapters anpassen:
+* Adapter: JavaScript/Blockly installiert und eine Instanz am laufen
+* Konfiguration des JavaScript Adapters anpassen:
   * Option: Enable Command "setObject" - ist aktiviert
   * Option: Enable Command "exec" - ist aktiviert
 
@@ -112,25 +106,37 @@ Die Python-Skripte werden von den Javascript-Skripten aus aufgerufen mit den nö
 
 | **Variable**        | **Verwendungszweck/Wert**                                                                                                    |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `BASE_ADAPTER`      | Basispfad zum Adapter unter dem die Datenpunkte angelegt werden. Standard ist der erste Javascript Adapter: "javascript.0".  |
+| `BASE_ADAPTER`      | Basispfad zum Adapter unter dem die Datenpunkte angelegt werden. Standard ist der erste JavaScript Adapter: "javascript.0".  |
 | `BASE_FOLDER`       | Basispfad unter dem die Datenpunkte angelegt werden sollen, Standardwert ist: "Datenpunkte.SwimSpa"                          |
 | `SPA_EXECUTEABLE`   | Auszuführendes Programm, Standard ist "python3"                                                                             |
-| `PY_SCRIPTS_FOLDER` | Verzeichnis in dem sich die Python-Skripte befinden. Standard ist`/SpaController` damit das mit der Anleitung zusammenpasst. |
+| `PY_SCRIPTS_FOLDER` | Verzeichnis in dem sich die Python-Skripte befinden. Standard ist`/SpaController`, damit das mit der Anleitung zusammenpasst. |
 
 #### 2.3.3. Schritt 2: Erstellen bzw. Aktualisieren der Datenpunkte
 
-* Neuen Ordner `Spa` im Javascript Adapter anlegen um alle folgenden Skripte an einen Ort zu abzulegen
-* Neues Skript `SpaVariablen` in diesem Ordner anlegen und den Inahlt von [SpaVariablen.js](JavaScript/SpaVariablen.js) einspielen
-* den Aufruf der Funktion createDatapoints() anpassen:
-
-
+* Neuen Ordner `Spa` im JavaScript Adapter anlegen, um alle folgenden Skripte an einen Ort zu abzulegen
+* Neues Skript `SpaVariablen` in diesem Ordner anlegen und den Inhalt von [SpaVariablen.js](JavaScript/SpaVariablen.js) einspielen
+* den Aufruf der Funktion createDatapoints() anpassen, welcher im Standard zur Steuerung von 2 Spa Controllern ausgelegt ist:
+  ```
+  createDatapoints([
+      { pumps: 3, blower: false, waterfall: false },   // 0: Pool
+      { pumps: 3, blower: true, waterfall: false }     // 1: Spa
+  ]);
+  ```
+* Die Funktion nimmt als Parameter ein Array entgegen, welches pro Spa Controller eine individuelle Konfiguration der Anzahl von Pumpen zulässt, sowie Gebläse und Wasserfall.
+* Beschreibung der Parameter pro Spa Controller
 | **Parameter** | **Wert**                                       |
 | --------------- | ------------------------------------------------ |
 | 1             | Anzahl Spa Controller im Netz, typ. Weise: 1   |
 | 2             | Anzahl Pumpen pro Spa Controller, typ. Weise 3 |
-| 3             | Datenpukte für Wasserfall mit anlegen         |
+| 3             | Datenpunkte für Wasserfall mit anlegen         |
+* Im einfachsten Fall (1 Spa Controller, 3 Pumpen) muss folgender Quelltext genutzt werden:
+  ```
+  createDatapoints([
+      { pumps: 3, blower: false, waterfall: false }   // 0: Spa
+  ]);
+  ```
 
-* Nach dem Speichern, das Script 1x ausführen
+* Nach dem Speichern, das Skript 1x ausführen
 * Prüfen ob die Datenpunkte vorhanden sind, der Objektbau sollte so aussehen:
   ![Datenpunkte im Objektbaum](doc/img/Datenpunkte_im_Objektbaum.png)
 
@@ -139,13 +145,13 @@ Die Python-Skripte werden von den Javascript-Skripten aus aufgerufen mit den nö
 Konfigurationswerte, die sich seltener ändern werden alle 6h von `SpaUpdateConfig` aktualisiert:
 
 * Neues Skript: `SpaUpdateConfig` im Ordner `Spa` erstellen und den Inhalt von [SpaUpdateConfig.js](JavaScript/SpaUpdateConfig.js) einfügen
-* Die Javascript Funktion: `updateSpaConfig()` wird beim speichern 1x ausgeführt, danach aller 6h.
-* Jetzt prüfen ob die Datenpunkte die eher statische Konfigurationswerte darstellen, wie (z.B.: Temepratureinheit, ID, U_ID) aktualisiert worden sind
+* Die JavaScript Funktion: `updateSpaConfig()` wird beim speichern 1x ausgeführt, danach aller 6h.
+* Jetzt prüfen ob die Datenpunkte die eher statische Konfigurationswerte darstellen, wie (z.B.: Temperatureinheit, ID, U_ID) aktualisiert worden sind
 
 <br> 
 Werte die sich häufig ändern werden minütlich von `SpaUpdateValues` aktualisiert:
 
-* Neues Skcript: `SpaUpdateValues` im Ordner `Spa` erstellen und den Inhalt von [SpaUpdateValues.js](JavaScript/SpaUpdateValues.js) einfügen
+* Neues Skript: `SpaUpdateValues` im Ordner `Spa` erstellen und den Inhalt von [SpaUpdateValues.js](JavaScript/SpaUpdateValues.js) einfügen
 * Das Skript wird minütlich aufgerufen und aktualisiert alle anderen Werte wie z.B. die Wassertemperaturen, Pumpenstatus, Licht usw.
 * Jetzt überprüfen, on die Wassertemperatur aktualisiert wurde
 
@@ -155,10 +161,11 @@ Werte die sich häufig ändern werden minütlich von `SpaUpdateValues` aktualisi
 * Skripte bereitstellen:
 
 
-| **Zweck**                                   | **Javascript**                                                                       | **Python Skript**                                                               |
+| **Zweck**                                   | **JavaScript**                                                                       | **Python Skript**                                                               |
 | --------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | Schalten der Pumpen                         | `PumpSwitches` (Datei: [PumpSwitches.js](JavaScript/PumpSwitches.js))                | `spa_switchPump.py clientId restApiUrl spaId spaIP pumpId newPumpState pumpChannel`   |
-| Schalten der Beleuchtung                    | `LightToggle` (Datei: [LightToggle.js](JavaScript/LightToggle.js))                   | `spa_toggleLight.py clientId restApiUrl spaId spaIP lightKey lightChannel`            |
+| Schalten der Beleuchtung                    | `LightToggle` (Datei: [LightToggle.js](JavaScript/LightToggle.js))                   | `spa_toggleLight.py clientId restApiUrl spaId spaIP lightKey lightChannel lightChannel`            |
+| Schalten des Gebläse                        | `BlowerToggle` (Datei: [BlowerSwitch.js](JavaScript/BlowerSwitch.js))                   | `spa_switchBlower.py clientId restApiUrl spaId spaIP blowerKey newBlowerState blowerChannel`            |
 | Setzen der Zieltemperatur                   | `TargetTemp` (Datei: [TargetTemp.js](JavaScript/TargetTemp.js))                      | `spa_setTargetTemp.py clientId restApiUrl spaId spaIP targetTemp targetTempDatapoint` |
 | Setzen des Wasserpflegemodus                | `WatercareMode` (Datei: [WatercareMode.js](JavaScript/WatercareMode.js))             | `spa_setWatercareMode.py clientId restApiUrl spaId spaIP waterCareModeIdx devicePath`          |
 | Automaische Nachführung der Zieltemperatur | `SpaMoveTargetTemp` (Datei: [SpaMoveTargetTemp.js](JavaScript/SpaMoveTargetTemp.js)) | nicht benötigt                                                                 |
@@ -169,7 +176,7 @@ Werte die sich häufig ändern werden minütlich von `SpaUpdateValues` aktualisi
 
 ### 3.1. SpaUpdateValues.js/spa_updateBulk.py
 
-Diese Skripte werden jede Minute gestartet (Zeile 4 in `SpaUpdateValues.js`) um Änderungen von Werten wie z.B. der Wassertemperatur, Pumpenstatus usw. vom SpaController auszulesen. Von den 1.440 Aufrufen pro Tag schlagen bei mir lt. Protokoll: ~50 Aufrufe fehl. Eine Quote so in der Höhe, vielleicht bis zu 200 je Tag, kann als normal betrachtet werden. Das hängt u.a. damit zusammen wie die geckolib mit dem SpaController kommuniziert, dann natürlich das minütliche pollen, vielleicht noch die App die parallel was tut, leider jenseits von perfekt von der Implementierung her :-(.
+Diese Skripte werden jede Minute gestartet (Zeile 4 in `SpaUpdateValues.js`), um Änderungen von Werten wie z.B. der Wassertemperatur, Pumpenstatus usw. vom SpaController auszulesen. Von den 1.440 Aufrufen pro Tag schlagen bei mir lt. Protokoll: ~50 Aufrufe fehl. Eine Quote so in der Höhe, vielleicht bis zu 200 je Tag, kann als normal betrachtet werden. Das hängt u.a. damit zusammen wie die geckolib mit dem SpaController kommuniziert, dann natürlich das minütliche Pollen, vielleicht noch die App die parallel was tut, leider jenseits von perfekt von der Implementierung her :-(.
 
 ### 3.2. Kein SpaController gefunden, wenn ioBroker im Docker Container läuft
 
@@ -178,7 +185,7 @@ Dieser Datenpunkt kann auch verwendet werden, wenn sich die SpaController in ein
 
 ### 3.3. SpaController Überwachung/Steuerung temporär deaktivieren
 
-Manchmal ist es notwendig einen SpaController temporär aus der Überwachung bzw. Steuerung durch die Skripte auszulassen. Um nicht alle Skripte manuell zu deaktivieren gibt es einen Datenpunkt: `javascript.0.Datenpunkte.SwimSpa.x.ControllerEnabled` pro SpaController. Dieser ist stnadardmäßig auf `true` und kann bei Bedarf auf `false`gesetzt werden.
+Manchmal ist es notwendig einen SpaController temporär aus der Überwachung bzw. Steuerung durch die Skripte auszulassen. Um nicht alle Skripte manuell zu deaktivieren gibt es einen Datenpunkt: `javascript.0.Datenpunkte.SwimSpa.x.ControllerEnabled` pro SpaController. Dieser ist standardmäßig auf `true` und kann bei Bedarf auf `false`gesetzt werden.
 
 **Hinweis:** Zusätzlich sollte noch die Steuerung in der Visualisierung deaktiviert werden.
 
@@ -194,15 +201,15 @@ Manchmal ist es notwendig einen SpaController temporär aus der Überwachung bzw
 * [X] Statt cron soll der regelmäßige Aufruf mit ioBroker Schedule möglich sein
 * [X] Status der Erreichbarkeit des Spa in Datenpunkt darstellen (Ebene Netzwerk, Online/Offline), sowie Fehler bei letzten Kommando
 * [ ] Richtiges Discovery der Eigenschaften des Spa Controllers anstatt feste Anlage der Datenpunkte via Skript
-* [X] Das setzen der Zieltemperatur ist empfindlich ggü. mehreren schnell auseinanderfolgenden Wertänderungen. Momentan am besten einen Slider nutzen, der eine Funktion "Update value on release" untersützt, so dass der DP nur einmal geändert wird. Das Script braucht immer ein paar Sekunden bis der Wert im Hintergrund gesetzt wurde.
+* [X] Das setzen der Zieltemperatur ist empfindlich ggü. mehreren schnell auseinanderfolgenden Wertänderungen. Momentan am besten einen Slider nutzen, der eine Funktion "Update value on release" unterstützt, so dass der DP nur einmal geändert wird. Das Skript braucht immer ein paar Sekunden bis der Wert im Hintergrund gesetzt wurde.
 * [X] Aktuell funktionieren die Erinnerungen nicht, da die geckolib keine Werte zurückgibt
 * [X] Das Auslösen einer Aktion (Licht an/aus, Pumpe an/aus) braucht ca. 15 Sekunden bis es umgesetzt ist (liegt am Verbindungsaufbau der recht lange dauert bei der geckolib)
 * [X] Pfad zu den Python Skripten global konfigurierbar machen und die Anleitung dahingehend anpassen (auch Skriptbereitstellung)
 * [ ] Struktur der Datenpunkte noch mal etwas straffen:
   * [X] `javascript.0.Datenpunkte.SwimSpa.x.WasserpflegeIndex` -> entfällt zugunsten `WasserpflegeSwitch`
   * [ ] ...
-* [ ] Python Scripte melden keine Statustexte mehr in Datenpunkte:
+* [ ] Python Skripte melden keine Statustexte mehr in Datenpunkte:
   * [X] `javascript.0.Datenpunkte.SwimSpa.x.Wasserpflege` -> entfällt zugunsten`WasserpflegeSwitch`, den zugehörigen z.B. deutschen Statustext kann ein Widget selbst darstellen (z.B. vis basic - ValueList Text oder eine Combobox)
   * [ ] ...
-* [ ] Statussensor (`javascript.0.Datenpunkte.SwimSpa.x.Sensoren.Status.State`) Funktion herstellen (funktioniert momentant überhaupt nicht bzw. zeigt immer: Connected)
+* [ ] Statussensor (`javascript.0.Datenpunkte.SwimSpa.x.Sensoren.Status.State`) Funktion herstellen (funktioniert momentan überhaupt nicht bzw. zeigt immer: Connected)
 * [X] Nutzbarkeit im Docker Container herstellen (durch die besonderen Netzwerksituation geht Discovery nicht und auch die Steuerung)

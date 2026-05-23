@@ -6,7 +6,7 @@
 //   waterfall: Wasserfall vorhanden (true/false)
 createDatapoints([
     { pumps: 3, blower: false, waterfall: false },   // 0: Pool
-    { pumps: 1, blower: true, waterfall: false }     // 1: Spa
+    { pumps: 3, blower: true, waterfall: false }     // 1: Spa
 ]);
 
 

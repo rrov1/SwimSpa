@@ -1,9 +1,9 @@
 // Achtung dieses Script benötigt: SpaGlobal.js im Ordner global (Expert Mode!)
 // Es muss initial 1x aufgerufen werden, danach sollte es aller 6h laufen, es werden eher selten geänderte Konfigurationswerte aktualisiert
 
-schedule("0 */6 * * *", function () {
-    updateSpaConfig();
-});
+//schedule("0 */6 * * *", function () {
+//    updateSpaConfig();
+//});
 
 updateSpaConfig();
 
@@ -122,6 +122,8 @@ async function updateSpaConfig() {
                 await execPythonAsync(discoverCommand);
             }
         }
+    } catch(err) {
+        console.error('*** command failed with error code: ' + err.code + " - " + err.message);
     } finally {
         // signal that there is no longer a script is running
         setState(dpBasePath + '.scriptRunning', {val: false, ack: true});

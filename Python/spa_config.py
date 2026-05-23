@@ -16,7 +16,7 @@ class ExitCode(IntEnum):
     IOBROKER_RESPONSE_ERROR = 6
 
 
-VERSION = "0.3.5"
+VERSION = "0.3.6"
 print(f"{sys.argv[0]} Version: {VERSION}")
 
 # Anzahl Argumente prüfen
@@ -150,6 +150,9 @@ async def main() -> int:
                 sJson2Send = sJson2Send + "{}.{}.Pumpen.{}.Modi={}".format(IOB_DP_BASE_PATH, ioBrDeviceNum, pump.key, urllib.parse.quote(str(pump.modes))) + "&"
             #
             print(f"anzahl blowers: {len(spaman.facade.blowers)}")
+            for blower in spaman.facade.blowers:
+                print(f"blower key {blower.key}, name {blower.name}")
+                sJson2Send = sJson2Send + "{}.{}.Blower.{}.Name={}".format(IOB_DP_BASE_PATH, ioBrDeviceNum, blower.key, urllib.parse.quote(blower.name)) + "&"
             #
             print(f"anzahl lichter: {len(spaman.facade.lights)}")
             for light in spaman.facade.lights:

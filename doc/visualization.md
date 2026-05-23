@@ -2,13 +2,13 @@
 <!-- TOC -->
 
 - [Inhalt](#inhalt)
-- [Beispiel für eine Visualisierung](#beispiel-für-eine-visualisierung)
+- [Beispiel für eine Visualisierung](#beispiel-f%C3%BCr-eine-visualisierung)
 - [Elemente zu Steuerung eines Spa Controllers](#elemente-zu-steuerung-eines-spa-controllers)
-  - [Temperaturen und sonstige Werte](#temperaturen-und-sonstige-werte)
-  - [Auswahl des Wasserpflegemodus](#auswahl-des-wasserpflegemodus)
-  - [Zieltemperatur](#zieltemperatur)
-  - [Schalten von Licht](#schalten-von-licht)
-  - [Pumpen- oder Filterstatus](#pumpen--oder-filterstatus)
+    - [1. Temperaturen und sonstige Werte](#1-temperaturen-und-sonstige-werte)
+    - [2. Auswahl des Wasserpflegemodus](#2-auswahl-des-wasserpflegemodus)
+    - [3. Zieltemperatur](#3-zieltemperatur)
+    - [4. Schalten von Licht](#4-schalten-von-licht)
+    - [5. Pumpen- oder Filterstatus](#5-pumpen--oder-filterstatus)
 
 <!-- /TOC -->
 
@@ -30,19 +30,19 @@ Konfiguration: <br>
 ![Basic Number Widget Attributes](img/basic-number_attributes.png)<br>
 
 ## Auswahl des Wasserpflegemodus
-jqui - Select ValueList:<br>
-![jqui - Select ValueList](img/jqui-Select_ValueList.png)<br>
+inventwo design: Universal (Schalter, Taster, Nav & mehr):<br>
+![inventwo design Universal](img/Modus_Auswahl.png)<br>
 
 Konfiguration: <br>
-![jqui - Select ValueList Attributes](img/jqui-Select_ValueList_attributes.png)<br>
+![inventwo design Universal Attribute](img/Modus_Auswahl_Attribute.png)<br>
 
 ## Zieltemperatur
-vis-inventwo - Simple Slider: <br>
-![vis-inventwo - Simple Slider](img/vis-inventwo-Simple_Slider.png)<br>
+inventwo design: Schieberegler: <br>
+![inventwo_design_Schieberegler](img/inventwo_design_Schieberegler.png)<br>
 
 Konfiguration: <br>
 **Wichtig:** Der Slider darf den Wert erst am Ende setzen (Option: "Update value on release" unbedingt aktivieren!)
-![vis-inventwo - Simple Slider Attributes](img/vis-inventwo-Simple_Slider_attributes.png)
+![inventwo_design_Schieberegler_Attribute](img/inventwo_design_Schieberegler_Attribute.png)
 
 ## Schalten von Licht
 vis-inventwo - Universal Switch: <br>
